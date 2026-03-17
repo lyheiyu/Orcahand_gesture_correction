@@ -26,10 +26,12 @@ python -m pip install orca_sim
 As we are continuously iterating on `orca_sim`, you can fetch the latest `main` building this package from source, so to be in the loop with the latest developments.
 
 ```bash
-uv pip install -e .
+git clone https://github.com/orcahand/orca_sim
+cd orca_sim && uv pip install -e .
 ```
 
-> [!WARNING] We are still iterating (a lot!) on this package. If you need stability, consider sticking to the Pypi package (`pip install orca_sim`).
+> [!WARNING] 
+We are still iterating (a lot!) on this package. If you need stability, consider sticking to the Pypi package (`pip install orca_sim`).
 
 ## Getting started
 
