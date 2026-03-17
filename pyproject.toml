@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "orca_sim"
+version = "0.1.0"
+description = "Minimal MuJoCo-only Orcahand repository with left, right, and combined Gymnasium environments."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  {name = "Francesco Capuano", email = "capuano@robots.ox.ac.uk"},
+]
+dependencies = [
+  "gymnasium>=0.29",
+  "mujoco>=3.1",
+  "numpy>=1.26",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+orca_sim = [
+  "*.xml",
+  "assets/mjcf/*.xml",
+  "assets/mjcf/left/visual/*.stl",
+  "assets/mjcf/left/collision/*.stl",
+  "assets/mjcf/right/visual/*.stl",
+  "assets/mjcf/right/collision/*.stl",
+  "models/mjcf/*.mjcf",
+]
