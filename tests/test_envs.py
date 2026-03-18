@@ -5,15 +5,20 @@ from orca_sim import OrcaHandCombined, OrcaHandLeft, OrcaHandRight
 
 
 @pytest.mark.parametrize(
-    ("env_cls", "obs_size", "action_size"),
+    ("env_cls", "obs_size", "action_size", "version"),
     [
-        (OrcaHandLeft, 34, 17),
-        (OrcaHandRight, 34, 17),
-        (OrcaHandCombined, 68, 34),
+        (OrcaHandLeft, 34, 17, "v1"),
+        (OrcaHandLeft, 34, 17, "v2"),
+        (OrcaHandRight, 34, 17, "v1"),
+        (OrcaHandRight, 34, 17, "v2"),
+        (OrcaHandCombined, 68, 34, "v1"),
+        (OrcaHandCombined, 68, 34, "v2"),
     ],
 )
-def test_env_reset_and_step_smoke(env_cls, obs_size: int, action_size: int) -> None:
-    env = env_cls()
+def test_env_reset_and_step_smoke(
+    env_cls, obs_size: int, action_size: int, version: str
+) -> None:
+    env = env_cls(version=version)
     try:
         obs, info = env.reset()
 
@@ -84,3 +89,5 @@ def test_step_rejects_wrong_action_shape() -> None:
             env.step(wrong_shape)
     finally:
         env.close()
+
+

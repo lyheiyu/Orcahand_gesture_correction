@@ -2,7 +2,7 @@ from pathlib import Path
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
 SCENES_ROOT = PACKAGE_ROOT / "scenes"
-LATEST_VERSION = "v1"
+LATEST_VERSION = "v2"
 
 
 def list_versions() -> tuple[str, ...]:

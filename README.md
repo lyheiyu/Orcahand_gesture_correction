@@ -50,7 +50,7 @@ The 'extended' version of different hands contain additional bodies (incl. inert
 
 ### Hands versioning
 
-By default, any environment defaults to the latest-version embodiment files. This default is controlled manually in `orca_sim.versions.LATEST_VERSION`.
+By default, any environment defaults to the latest fully-supported embodiment files.
 
 ```python
 from orca_sim import OrcaHandRight, OrcaHandRightExtended
@@ -82,8 +82,6 @@ src/orca_sim/models/
   v2/
     left.mjcf
     right.mjcf
-    left_extended.mjcf
-    right_extended.mjcf
 ```
 
 You can still pin an older version explicitly when needed:
@@ -93,3 +91,5 @@ from orca_sim import OrcaHandCombinedExtended
 
 env = OrcaHandCombinedExtended(version="v1")  # loads the v1 hand
 ```
+
+See our [`random_policy.py`](random_policy.py) example to see how to instantiate and interface an ORCA hand.

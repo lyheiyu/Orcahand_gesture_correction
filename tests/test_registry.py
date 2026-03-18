@@ -1,6 +1,12 @@
 import gymnasium as gym
+import pytest
 
 from orca_sim import register_envs
+
+# Instantiating all available environments regardless of versioning
+pytestmark = pytest.mark.filterwarnings(
+    "ignore:.*environment .* is out of date.*:DeprecationWarning"
+)
 
 
 def test_register_envs_is_idempotent_and_envs_can_be_made() -> None:
@@ -9,8 +15,11 @@ def test_register_envs_is_idempotent_and_envs_can_be_made() -> None:
 
     for env_id, obs_shape, action_shape in [
         ("OrcaHandLeft-v1", (34,), (17,)),
+        ("OrcaHandLeft-v2", (34,), (17,)),
         ("OrcaHandRight-v1", (34,), (17,)),
+        ("OrcaHandRight-v2", (34,), (17,)),
         ("OrcaHandCombined-v1", (68,), (34,)),
+        ("OrcaHandCombined-v2", (68,), (34,)),
     ]:
         assert env_id in gym.registry
 
