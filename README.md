@@ -46,3 +46,50 @@ obs, info = env.reset()
 obs, reward, terminated, truncated, info = env.step(env.action_space.sample())
 env.close()
 ```
+The 'extended' version of different hands contain additional bodies (incl. inertial properties) such as the camera mount, the U2D2 board and fans.
+
+### Hands versioning
+
+By default, any environment defaults to the latest-version embodiment files. This default is controlled manually in `orca_sim.versions.LATEST_VERSION`.
+
+```python
+from orca_sim import OrcaHandRight, OrcaHandRightExtended
+
+env = OrcaHandRight()  # latest version of the standard right hand
+extended_env = OrcaHandRightExtended()  # latest version of the extended right hand
+```
+
+Versions are stored with a flat layout like:
+
+```text
+src/orca_sim/scenes/
+  v1/
+    scene_left.xml
+    scene_right.xml
+    scene_combined.xml
+    scene_left_extended.xml
+    scene_right_extended.xml
+    scene_combined_extended.xml
+  v2/
+    ...
+
+src/orca_sim/models/
+  v1/
+    left.mjcf
+    right.mjcf
+    left_extended.mjcf
+    right_extended.mjcf
+  v2/
+    left.mjcf
+    right.mjcf
+    left_extended.mjcf
+    right_extended.mjcf
+```
+
+You can still pin an older version explicitly when needed:
+
+```python
+from orca_sim import OrcaHandCombinedExtended
+
+env = OrcaHandCombinedExtended(version="v1")  # loads the v1 hand
+```
