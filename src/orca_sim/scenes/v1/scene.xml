@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<mujoco model="orcahand scene">
+<mujoco model="orcahand_v1_scene">
   
   <!-- Camera placement -->
   <statistic extent="0.3" center="0.1 0.1 0.15"/>
