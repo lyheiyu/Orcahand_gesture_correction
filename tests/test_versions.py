@@ -63,4 +63,4 @@ def test_resolve_version_rejects_unknown_versions() -> None:
     ],
 )
 def test_scene_paths_load_directly(scene_path: str) -> None:
-    mujoco.MjModel.from_xml_path(str(Path(scene_path)))
+    mujoco.MjModel.from_xml_path(str(Path(scene_path).resolve()))

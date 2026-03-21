@@ -13,13 +13,15 @@ def test_register_envs_is_idempotent_and_envs_can_be_made() -> None:
     register_envs()
     register_envs()
 
-    for env_id, obs_shape, action_shape in [
-        ("OrcaHandLeft-v1", (34,), (17,)),
-        ("OrcaHandLeft-v2", (34,), (17,)),
-        ("OrcaHandRight-v1", (34,), (17,)),
-        ("OrcaHandRight-v2", (34,), (17,)),
-        ("OrcaHandCombined-v1", (68,), (34,)),
-        ("OrcaHandCombined-v2", (68,), (34,)),
+    for env_id, obs_shape, action_shape, expect_empty_info in [
+        ("OrcaHandLeft-v1", (34,), (17,), True),
+        ("OrcaHandLeft-v2", (34,), (17,), True),
+        ("OrcaHandRight-v1", (34,), (17,), True),
+        ("OrcaHandRight-v2", (34,), (17,), True),
+        ("OrcaHandRightCubeOrientation-v1", (51,), (17,), False),
+        ("OrcaHandRightCubeOrientation-v2", (51,), (17,), False),
+        ("OrcaHandCombined-v1", (68,), (34,), True),
+        ("OrcaHandCombined-v2", (68,), (34,), True),
     ]:
         assert env_id in gym.registry
 
@@ -29,6 +31,9 @@ def test_register_envs_is_idempotent_and_envs_can_be_made() -> None:
 
             assert obs.shape == obs_shape
             assert env.action_space.shape == action_shape
-            assert info == {}
+            if expect_empty_info:
+                assert info == {}
+            else:
+                assert "red_face_up_alignment" in info
         finally:
             env.close()
