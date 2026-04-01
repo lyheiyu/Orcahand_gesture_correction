@@ -1,0 +1,68 @@
+<?xml version="1.0" ?>
+<mujoco model="ORCA hand right teleop scene">
+
+  <include file="../../models/v2/assets/scene.xml"/>
+  <include file="../../models/v2/assets/options.xml"/>
+  <include file="../../models/v2/mjcf/orcahand_right.mjcf"/>
+
+  <worldbody>
+    <body name="right_mount" pos="0.09363 0.00332 0.058" euler="1.5708 0 0">
+      <joint
+        name="teleop_base_yaw"
+        type="hinge"
+        axis="0 0 1"
+        range="-0.9 0.9"
+        damping="1.0"
+        armature="0.01"
+      />
+      <joint
+        name="teleop_base_pitch"
+        type="hinge"
+        axis="1 0 0"
+        range="-0.7 0.7"
+        damping="1.0"
+        armature="0.01"
+      />
+      <joint
+        name="teleop_base_roll"
+        type="hinge"
+        axis="0 1 0"
+        range="-0.9 0.9"
+        damping="1.0"
+        armature="0.01"
+      />
+      <include file="../../models/v2/mjcf/orcahand_right_body.xml"/>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <position
+      name="teleop_base_yaw_actuator"
+      joint="teleop_base_yaw"
+      ctrllimited="true"
+      ctrlrange="-0.9 0.9"
+      forcelimited="true"
+      forcerange="-200 200"
+      kp="80.0"
+    />
+    <position
+      name="teleop_base_pitch_actuator"
+      joint="teleop_base_pitch"
+      ctrllimited="true"
+      ctrlrange="-0.7 0.7"
+      forcelimited="true"
+      forcerange="-200 200"
+      kp="80.0"
+    />
+    <position
+      name="teleop_base_roll_actuator"
+      joint="teleop_base_roll"
+      ctrllimited="true"
+      ctrlrange="-0.9 0.9"
+      forcelimited="true"
+      forcerange="-200 200"
+      kp="80.0"
+    />
+  </actuator>
+
+</mujoco>

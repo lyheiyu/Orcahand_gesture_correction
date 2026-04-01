@@ -21,6 +21,10 @@ dependencies = [
 dev = [
   "pytest>=8",
 ]
+teleop = [
+  "mediapipe>=0.10.14",
+  "opencv-python>=4.9",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

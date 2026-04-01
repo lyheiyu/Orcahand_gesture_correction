@@ -113,3 +113,26 @@ The implementation is intentionally split so it doubles as a porting template:
 - The nominal palm-up hand pose and in-palm cube spawn are now authored into the task-specific scene/model files, so opening the XML directly in MuJoCo shows the intended setup.
 - The task logic lives in [`src/orca_sim/task_envs.py`](src/orca_sim/task_envs.py), including reset-time cube randomization and optional hand-pose overrides for custom MJCF layouts.
 
+## MediaPipe teleoperation
+
+You can drive the right ORCA hand with webcam hand tracking using MediaPipe and OpenCV:
+
+```bash
+python -m pip install -e ".[teleop]"
+python mediapipe_teleop.py --sim-render-mode rgb_array
+```
+
+This starter teleop script maps the tracked human hand to the 17 right-hand actuators of the latest `OrcaHandRight` environment. The mapping is intentionally lightweight, so expect to tune the gesture-to-joint conversion and smoothing for your camera setup.
+
+If your installed MediaPipe exposes only the newer Tasks API, also download a local `hand_landmarker.task` model and either place it next to `mediapipe_teleop.py` or pass:
+
+```bash
+python mediapipe_teleop.py --hand-landmarker-model path/to/hand_landmarker.task
+```
+
+Useful flags:
+
+- `--sim-render-mode human` opens the MuJoCo viewer instead of an OpenCV simulator preview.
+- `--camera-id 1` selects a different webcam if the default device is not the right one.
+- `--no-mirror` disables the default selfie-style camera mirroring.
+
