@@ -107,6 +107,14 @@ class SelectedHand:
     label: str
 
 
+@dataclass
+class BaseCalibration:
+    yaw: float = 0.0
+    pitch: float = 0.0
+    roll: float = 0.0
+    calibrated: bool = False
+
+
 class OrcaHandRightTeleop(BaseOrcaHandEnv):
     def __init__(
         self,
@@ -189,6 +197,12 @@ def _map_signed_to_range(signed_value: float, low: float, high: float) -> float:
     midpoint = 0.5 * (low + high)
     half_range = 0.5 * (high - low)
     return float(midpoint + signed_value * half_range)
+
+
+def _apply_deadzone(value: float, threshold: float = 0.08) -> float:
+    if abs(value) <= threshold:
+        return 0.0
+    return float(value)
 
 
 def _default_action(env: OrcaHandRight) -> np.ndarray:
@@ -504,6 +518,7 @@ def _draw_status(
     fps: float,
     tracked: bool,
     handedness: str,
+    calibrated: bool,
     palm_state: str,
     palm_normal: tuple[float, float, float],
     base_yaw: float,
@@ -543,8 +558,18 @@ def _draw_status(
     )
     cv2.putText(
         frame,
-        f"Palm: {palm_state}",
+        f"Calibrated: {'yes' if calibrated else 'no'}",
         (16, 118),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.65,
+        (80, 255, 120) if calibrated else (255, 210, 80),
+        2,
+        cv2.LINE_AA,
+    )
+    cv2.putText(
+        frame,
+        f"Palm: {palm_state}",
+        (16, 148),
         cv2.FONT_HERSHEY_SIMPLEX,
         0.65,
         (80, 220, 255),
@@ -557,7 +582,7 @@ def _draw_status(
             "Palm normal xyz: "
             f"{palm_normal[0]:+0.2f} {palm_normal[1]:+0.2f} {palm_normal[2]:+0.2f}"
         ),
-        (16, 148),
+        (16, 178),
         cv2.FONT_HERSHEY_SIMPLEX,
         0.65,
         (80, 220, 255),
@@ -567,7 +592,7 @@ def _draw_status(
     cv2.putText(
         frame,
         f"Base y/p/r: {base_yaw:+0.2f} {base_pitch:+0.2f} {base_roll:+0.2f}",
-        (16, 178),
+        (16, 208),
         cv2.FONT_HERSHEY_SIMPLEX,
         0.65,
         (80, 220, 255),
@@ -672,6 +697,11 @@ def main() -> None:
         help="Keep the base controlled only by manual keys instead of MediaPipe-derived pose.",
     )
     parser.add_argument(
+        "--disable-auto-calibration",
+        action="store_true",
+        help="Do not automatically treat the first stable tracked hand pose as the neutral base pose.",
+    )
+    parser.add_argument(
         "--sim-window-width",
         type=int,
         default=960,
@@ -716,6 +746,7 @@ def main() -> None:
     base_manual_yaw = 0.0
     base_manual_pitch = 0.0
     base_manual_roll = 0.0
+    base_calibration = BaseCalibration()
 
     prev_time = time.perf_counter()
 
@@ -786,6 +817,7 @@ def main() -> None:
                 displayed_base_yaw = 0.0
                 displayed_base_pitch = 0.0
                 displayed_base_roll = 0.0
+                current_raw_base = None
                 if MP_BACKEND == "solutions":
                     results = hand_tracker.process(rgb_frame)
                     selected = _select_hand_solutions(results, args.target_hand, mirror)
@@ -801,11 +833,26 @@ def main() -> None:
                             features.palm_normal_y,
                             features.palm_normal_z,
                         )
+                        current_raw_base = (
+                            features.base_yaw,
+                            features.base_pitch,
+                            features.base_roll,
+                        )
                         if args.disable_auto_base:
                             features.base_yaw = 0.0
                             features.base_pitch = 0.0
                             features.base_roll = 0.0
                         else:
+                            if not base_calibration.calibrated and not args.disable_auto_calibration:
+                                base_calibration = BaseCalibration(
+                                    yaw=features.base_yaw,
+                                    pitch=features.base_pitch,
+                                    roll=features.base_roll,
+                                    calibrated=True,
+                                )
+                            features.base_yaw = _apply_deadzone(features.base_yaw - base_calibration.yaw)
+                            features.base_pitch = _apply_deadzone(features.base_pitch - base_calibration.pitch)
+                            features.base_roll = _apply_deadzone(features.base_roll - base_calibration.roll)
                             features.base_yaw = _clip(features.base_yaw * base_gain, -1.0, 1.0)
                             features.base_pitch = _clip(features.base_pitch * base_gain, -1.0, 1.0)
                             features.base_roll = _clip(features.base_roll * base_roll_gain, -1.0, 1.0)
@@ -835,11 +882,26 @@ def main() -> None:
                             features.palm_normal_y,
                             features.palm_normal_z,
                         )
+                        current_raw_base = (
+                            features.base_yaw,
+                            features.base_pitch,
+                            features.base_roll,
+                        )
                         if args.disable_auto_base:
                             features.base_yaw = 0.0
                             features.base_pitch = 0.0
                             features.base_roll = 0.0
                         else:
+                            if not base_calibration.calibrated and not args.disable_auto_calibration:
+                                base_calibration = BaseCalibration(
+                                    yaw=features.base_yaw,
+                                    pitch=features.base_pitch,
+                                    roll=features.base_roll,
+                                    calibrated=True,
+                                )
+                            features.base_yaw = _apply_deadzone(features.base_yaw - base_calibration.yaw)
+                            features.base_pitch = _apply_deadzone(features.base_pitch - base_calibration.pitch)
+                            features.base_roll = _apply_deadzone(features.base_roll - base_calibration.roll)
                             features.base_yaw = _clip(features.base_yaw * base_gain, -1.0, 1.0)
                             features.base_pitch = _clip(features.base_pitch * base_gain, -1.0, 1.0)
                             features.base_roll = _clip(features.base_roll * base_roll_gain, -1.0, 1.0)
@@ -893,12 +955,13 @@ def main() -> None:
                     fps=1.0 / dt,
                     tracked=tracked,
                     handedness=tracked_label,
+                    calibrated=base_calibration.calibrated,
                     palm_state=displayed_palm_state,
                     palm_normal=displayed_palm_normal,
                     base_yaw=displayed_base_yaw,
                     base_pitch=displayed_base_pitch,
                     base_roll=displayed_base_roll,
-                    help_text="q quit | r reset | m mirror | j/l yaw | i/k pitch | u/o roll",
+                    help_text="q quit | r reset | c calibrate | m mirror | j/l yaw | i/k pitch | u/o roll",
                 )
                 cv2.imshow("MediaPipe Teleop", frame)
 
@@ -911,6 +974,14 @@ def main() -> None:
                     base_manual_yaw = 0.0
                     base_manual_pitch = 0.0
                     base_manual_roll = 0.0
+                    base_calibration = BaseCalibration()
+                if key == ord("c") and tracked and current_raw_base is not None:
+                    base_calibration = BaseCalibration(
+                        yaw=current_raw_base[0],
+                        pitch=current_raw_base[1],
+                        roll=current_raw_base[2],
+                        calibrated=True,
+                    )
                 if key == ord("m"):
                     mirror = not mirror
                 if key == ord("j"):
