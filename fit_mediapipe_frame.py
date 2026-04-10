@@ -55,6 +55,10 @@ def main() -> None:
     print(np.array2string(heuristic, precision=4, suppress_small=True))
     print("optimized_action=")
     print(np.array2string(result.action, precision=4, suppress_small=True))
+    print("optimized_sparse_points=")
+    print(np.array2string(result.optimized_sparse_points, precision=4, suppress_small=True))
+    print("optimized_full_points=")
+    print(np.array2string(result.optimized_full_points, precision=4, suppress_small=True))
 
 
 if __name__ == "__main__":

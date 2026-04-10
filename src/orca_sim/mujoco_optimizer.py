@@ -47,6 +47,8 @@ class OptimizationResult:
     iterations: int
     method: str
     loss_terms: dict[str, float]
+    optimized_sparse_points: np.ndarray
+    optimized_full_points: np.ndarray
 
 
 class MujocoHandPoseOptimizer:
@@ -69,12 +71,14 @@ class MujocoHandPoseOptimizer:
         "pinky_mcp",
         "pinky_tip",
     )
+    _SPARSE_POINT_ORDER = _POINT_LABELS
 
     def __init__(self, version: str | None = None) -> None:
         self.env = OrcaHandRight(render_mode=None, version=version)
         self.projector = OrcaFeatureProjector(version=version)
         self._joint_qpos_indices = self._build_joint_qpos_indices()
         self._body_ids = self._build_body_ids()
+        self._joint_ids = self._build_joint_ids()
         self._default_action = self._compute_default_action()
 
     def close(self) -> None:
@@ -164,6 +168,8 @@ class MujocoHandPoseOptimizer:
                 iterations=int(getattr(result, "nit", 0)),
                 method="scipy_lbfgsb",
                 loss_terms=loss_terms(action),
+                optimized_sparse_points=self.sparse_landmarks_from_action(action),
+                optimized_full_points=self.full_landmarks_from_action(action),
             )
 
         action, loss, iterations = self._coordinate_descent(objective, initial_action, max_iterations)
@@ -174,6 +180,8 @@ class MujocoHandPoseOptimizer:
             iterations=iterations,
             method="coordinate_descent",
             loss_terms=loss_terms(action),
+            optimized_sparse_points=self.sparse_landmarks_from_action(action),
+            optimized_full_points=self.full_landmarks_from_action(action),
         )
 
     def _coordinate_descent(
@@ -233,10 +241,32 @@ class MujocoHandPoseOptimizer:
             "index_tip": "right_I-FingerTipAssembly_ec49c16c",
             "middle_mcp": "right_M-AP_e04a96f2",
             "middle_tip": "right_M-FingerTipAssembly_34afb748",
+            "ring_tip": "right_M-FingerTipAssembly_424a8e75",
             "pinky_mcp": "right_P-AP_f5e42b61",
             "pinky_tip": "right_P-FingerTipAssembly_cd219176",
         }
         return {label: self.env.model.body(name).id for label, name in names.items()}
+
+    def _build_joint_ids(self) -> dict[str, int]:
+        names = {
+            "thumb_cmc": "right_t-cmc",
+            "thumb_abd": "right_t-abd",
+            "thumb_mcp": "right_t-mcp",
+            "thumb_ip": "right_t-pip",
+            "index_mcp": "right_i-abd",
+            "index_pip": "right_i-mcp",
+            "index_dip": "right_i-pip",
+            "middle_mcp": "right_m-abd",
+            "middle_pip": "right_m-mcp",
+            "middle_dip": "right_m-pip",
+            "ring_mcp": "right_r-abd",
+            "ring_pip": "right_r-mcp",
+            "ring_dip": "right_r-pip",
+            "pinky_mcp": "right_p-abd",
+            "pinky_pip": "right_p-mcp",
+            "pinky_dip": "right_p-pip",
+        }
+        return {label: self.env.model.joint(name).id for label, name in names.items()}
 
     def _target_sparse_points(self, normalized_points: np.ndarray) -> dict[str, np.ndarray]:
         return {
@@ -249,6 +279,57 @@ class MujocoHandPoseOptimizer:
             "pinky_mcp": normalized_points[PINKY_MCP],
             "pinky_tip": normalized_points[PINKY_TIP],
         }
+
+    def sparse_landmarks_from_action(self, action: np.ndarray) -> np.ndarray:
+        sparse_points, _ = self._forward_sparse_points(action)
+        return np.vstack([sparse_points[label] for label in self._SPARSE_POINT_ORDER]).astype(np.float32)
+
+    def full_landmarks_from_action(self, action: np.ndarray) -> np.ndarray:
+        self._set_pose_from_action(action)
+        body_points = {
+            label: self.env.data.xpos[body_id].copy()
+            for label, body_id in self._body_ids.items()
+        }
+        joint_points = {
+            label: self.env.data.xanchor[joint_id].copy()
+            for label, joint_id in self._joint_ids.items()
+        }
+
+        world_points = np.vstack(
+            [
+                body_points["wrist"],
+                joint_points["thumb_cmc"],
+                joint_points["thumb_mcp"],
+                joint_points["thumb_ip"],
+                body_points["thumb_tip"],
+                joint_points["index_mcp"],
+                joint_points["index_pip"],
+                joint_points["index_dip"],
+                body_points["index_tip"],
+                joint_points["middle_mcp"],
+                joint_points["middle_pip"],
+                joint_points["middle_dip"],
+                body_points["middle_tip"],
+                joint_points["ring_mcp"],
+                joint_points["ring_pip"],
+                joint_points["ring_dip"],
+                body_points["ring_tip"],
+                joint_points["pinky_mcp"],
+                joint_points["pinky_pip"],
+                joint_points["pinky_dip"],
+                body_points["pinky_tip"],
+            ],
+            dtype=np.float64,
+        )
+        return self._normalize_world_points(world_points).astype(np.float32)
+
+    def _normalize_world_points(self, world_points: np.ndarray) -> np.ndarray:
+        translated = world_points - world_points[WRIST]
+        palm_width = np.linalg.norm(translated[INDEX_MCP] - translated[PINKY_MCP])
+        palm_length = np.linalg.norm(translated[MIDDLE_MCP] - translated[WRIST])
+        scale = max(float(palm_width), float(palm_length), 1e-6)
+        return translated / scale
+
 
     def _forward_sparse_points(self, action: np.ndarray) -> tuple[dict[str, np.ndarray], np.ndarray]:
         self._set_pose_from_action(action)

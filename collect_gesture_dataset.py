@@ -23,6 +23,7 @@ except ModuleNotFoundError as exc:
     raise SystemExit("Missing `mediapipe`. Install `python -m pip install -e \".[teleop]\"`.") from exc
 
 from orca_sim.gesture_features import OrcaFeatureProjector
+from orca_sim.mujoco_optimizer import MujocoHandPoseOptimizer
 
 try:
     mp_drawing = mp.solutions.drawing_utils
@@ -118,6 +119,25 @@ def _build_headers(projector: OrcaFeatureProjector) -> list[str]:
     return headers
 
 
+def _append_optimizer_headers(headers: list[str]) -> list[str]:
+    extended = headers.copy()
+    extended.extend(f"optimized_action_{i}" for i in range(17))
+    extended.extend(f"optimized_sparse_{i}" for i in range(8 * 3))
+    extended.extend(f"optimized_full_{i}" for i in range(21 * 3))
+    extended.extend(
+        [
+            "optimized_loss_total",
+            "optimized_loss_landmark",
+            "optimized_loss_palm",
+            "optimized_loss_prior",
+            "optimized_loss_temporal",
+            "optimized_loss_default_pose",
+            "optimized_loss_boundary",
+        ]
+    )
+    return extended
+
+
 def _row_from_points(
     projector: OrcaFeatureProjector,
     label: str,
@@ -131,6 +151,30 @@ def _row_from_points(
     for prefix in ("raw", "geom", "corrected"):
         row.extend(float(v) for v in groups[prefix])
     return row
+
+
+def _append_optimizer_row(
+    row: list[float | str],
+    optimizer: MujocoHandPoseOptimizer,
+    points: np.ndarray,
+    prev_action: np.ndarray | None,
+) -> tuple[list[float | str], np.ndarray]:
+    result = optimizer.optimize(points, prev_action=prev_action)
+    row.extend(float(v) for v in result.action)
+    row.extend(float(v) for v in result.optimized_sparse_points.reshape(-1))
+    row.extend(float(v) for v in result.optimized_full_points.reshape(-1))
+    row.extend(
+        [
+            float(result.loss_terms["total"]),
+            float(result.loss_terms["landmark"]),
+            float(result.loss_terms["palm"]),
+            float(result.loss_terms["prior"]),
+            float(result.loss_terms["temporal"]),
+            float(result.loss_terms["default_pose"]),
+            float(result.loss_terms["boundary"]),
+        ]
+    )
+    return row, result.action.astype(np.float64)
 
 
 def main() -> None:
@@ -166,6 +210,16 @@ def main() -> None:
         default=1,
         help="When recording a sequence, save one sample every N tracked frames.",
     )
+    parser.add_argument(
+        "--version",
+        default=None,
+        help="ORCA hand version for projection and optimization, for example v2.",
+    )
+    parser.add_argument(
+        "--export-optimized",
+        action="store_true",
+        help="Also export MuJoCo-optimized actions and refined landmarks.",
+    )
     args = parser.parse_args()
 
     output_path = Path(args.output).resolve()
@@ -177,9 +231,13 @@ def main() -> None:
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with OrcaFeatureProjector() as projector:
+    with OrcaFeatureProjector(version=args.version) as projector:
         headers = _build_headers(projector)
+        if args.export_optimized:
+            headers = _append_optimizer_headers(headers)
         need_header = not output_path.exists()
+        optimizer = MujocoHandPoseOptimizer(version=args.version) if args.export_optimized else None
+        prev_optimized_action: np.ndarray | None = None
 
         if MP_BACKEND == "solutions":
             tracker = mp_hands.Hands(
@@ -203,85 +261,93 @@ def main() -> None:
             )
             tracker = HandLandmarker.create_from_options(options)
 
-        with tracker, output_path.open("a", newline="", encoding="utf-8") as fh:
-            writer = csv.writer(fh)
-            if need_header:
-                writer.writerow(headers)
+        try:
+            with tracker, output_path.open("a", newline="", encoding="utf-8") as fh:
+                writer = csv.writer(fh)
+                if need_header:
+                    writer.writerow(headers)
 
-            saved = 0
-            recording = False
-            sequence_id = args.sequence_id or ""
-            sequence_frame_id = 0
-            tracked_frame_counter = 0
-            sequence_start_time = 0.0
-            while True:
-                ok, frame = cap.read()
-                if not ok:
-                    break
+                saved = 0
+                recording = False
+                sequence_id = args.sequence_id or ""
+                sequence_frame_id = 0
+                tracked_frame_counter = 0
+                sequence_start_time = 0.0
+                while True:
+                    ok, frame = cap.read()
+                    if not ok:
+                        break
 
-                if mirror:
-                    frame = cv2.flip(frame, 1)
-                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-                hand_landmarks = None
-                if MP_BACKEND == "solutions":
-                    results = tracker.process(rgb)
-                    hand_landmarks = _select_target_hand_solutions(results, args.target_hand, mirror)
-                else:
-                    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
-                    results = tracker.detect(mp_image)
-                    hand_landmarks = _select_target_hand_tasks(results, args.target_hand, mirror)
-
-                points = None
-                if hand_landmarks is not None:
-                    points = _landmarks_to_array(hand_landmarks)
                     if mirror:
-                        points[:, 0] = 1.0 - points[:, 0]
-                    _draw_landmarks(frame, hand_landmarks)
-                    tracked_frame_counter += 1
-                else:
-                    tracked_frame_counter = 0
+                        frame = cv2.flip(frame, 1)
+                    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-                cv2.putText(frame, f"label={args.label}", (16, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (80, 255, 120), 2)
-                cv2.putText(frame, f"saved={saved}", (16, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (80, 255, 120), 2)
-                cv2.putText(
-                    frame,
-                    f"detected={'yes' if points is not None else 'no'} hand={args.target_hand}",
-                    (16, 90),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.8,
-                    (80, 255, 120) if points is not None else (70, 120, 255),
-                    2,
-                )
-                if args.sequence_mode:
-                    status_color = (80, 255, 120) if recording else (255, 210, 80)
+                    hand_landmarks = None
+                    if MP_BACKEND == "solutions":
+                        results = tracker.process(rgb)
+                        hand_landmarks = _select_target_hand_solutions(results, args.target_hand, mirror)
+                    else:
+                        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+                        results = tracker.detect(mp_image)
+                        hand_landmarks = _select_target_hand_tasks(results, args.target_hand, mirror)
+
+                    points = None
+                    if hand_landmarks is not None:
+                        points = _landmarks_to_array(hand_landmarks)
+                        if mirror:
+                            points[:, 0] = 1.0 - points[:, 0]
+                        _draw_landmarks(frame, hand_landmarks)
+                        tracked_frame_counter += 1
+                    else:
+                        tracked_frame_counter = 0
+
                     cv2.putText(
                         frame,
-                        f"recording={'yes' if recording else 'no'} seq={sequence_id or '-'} frame_id={sequence_frame_id}",
-                        (16, 120),
+                        f"label={args.label}",
+                        (16, 30),
                         cv2.FONT_HERSHEY_SIMPLEX,
-                        0.7,
-                        status_color,
+                        0.8,
+                        (80, 255, 120),
                         2,
                     )
-                    help_text = "space start/stop seq | q quit"
-                else:
-                    help_text = "space save | q quit"
-                cv2.putText(
-                    frame,
-                    help_text,
-                    (16, frame.shape[0] - 16),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.6,
-                    (235, 235, 235),
-                    1,
-                )
-                cv2.imshow("Gesture Dataset Collector", frame)
+                    cv2.putText(frame, f"saved={saved}", (16, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (80, 255, 120), 2)
+                    cv2.putText(
+                        frame,
+                        f"detected={'yes' if points is not None else 'no'} hand={args.target_hand}",
+                        (16, 90),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.8,
+                        (80, 255, 120) if points is not None else (70, 120, 255),
+                        2,
+                    )
+                    if args.sequence_mode:
+                        status_color = (80, 255, 120) if recording else (255, 210, 80)
+                        cv2.putText(
+                            frame,
+                            f"recording={'yes' if recording else 'no'} seq={sequence_id or '-'} frame_id={sequence_frame_id}",
+                            (16, 120),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.7,
+                            status_color,
+                            2,
+                        )
+                        help_text = "space start/stop seq | q quit"
+                    else:
+                        help_text = "space save | q quit"
+                    cv2.putText(
+                        frame,
+                        help_text,
+                        (16, frame.shape[0] - 16),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.6,
+                        (235, 235, 235),
+                        1,
+                    )
+                    cv2.imshow("Gesture Dataset Collector", frame)
 
-                if args.sequence_mode and recording and points is not None and tracked_frame_counter % save_every_n_frames == 0:
-                    timestamp_sec = time.perf_counter() - sequence_start_time
-                    writer.writerow(
-                        _row_from_points(
+                    if args.sequence_mode and recording and points is not None and tracked_frame_counter % save_every_n_frames == 0:
+                        timestamp_sec = time.perf_counter() - sequence_start_time
+                        row = _row_from_points(
                             projector,
                             args.label,
                             sequence_id,
@@ -289,27 +355,35 @@ def main() -> None:
                             timestamp_sec,
                             points,
                         )
-                    )
-                    fh.flush()
-                    saved += 1
-                    sequence_frame_id += 1
+                        if optimizer is not None:
+                            row, prev_optimized_action = _append_optimizer_row(
+                                row,
+                                optimizer,
+                                points,
+                                prev_optimized_action,
+                            )
+                        writer.writerow(row)
+                        fh.flush()
+                        saved += 1
+                        sequence_frame_id += 1
 
-                key = cv2.waitKey(1) & 0xFF
-                if key in {27, ord("q")}:
-                    break
-                if key == ord(" "):
-                    if args.sequence_mode:
-                        if recording:
-                            recording = False
-                        else:
-                            sequence_id = args.sequence_id or uuid.uuid4().hex[:12]
-                            sequence_frame_id = 0
-                            tracked_frame_counter = 0
-                            sequence_start_time = time.perf_counter()
-                            recording = True
-                    elif points is not None:
-                        writer.writerow(
-                            _row_from_points(
+                    key = cv2.waitKey(1) & 0xFF
+                    if key in {27, ord("q")}:
+                        break
+                    if key == ord(" "):
+                        if args.sequence_mode:
+                            if recording:
+                                recording = False
+                                prev_optimized_action = None
+                            else:
+                                sequence_id = args.sequence_id or uuid.uuid4().hex[:12]
+                                sequence_frame_id = 0
+                                tracked_frame_counter = 0
+                                sequence_start_time = time.perf_counter()
+                                prev_optimized_action = None
+                                recording = True
+                        elif points is not None:
+                            row = _row_from_points(
                                 projector,
                                 args.label,
                                 "single_frame",
@@ -317,9 +391,19 @@ def main() -> None:
                                 0.0,
                                 points,
                             )
-                        )
-                        fh.flush()
-                        saved += 1
+                            if optimizer is not None:
+                                row, prev_optimized_action = _append_optimizer_row(
+                                    row,
+                                    optimizer,
+                                    points,
+                                    prev_optimized_action,
+                                )
+                            writer.writerow(row)
+                            fh.flush()
+                            saved += 1
+        finally:
+            if optimizer is not None:
+                optimizer.close()
 
     cap.release()
     cv2.destroyAllWindows()

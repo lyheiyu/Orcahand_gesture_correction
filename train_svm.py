@@ -34,6 +34,8 @@ def _load_dataset(path: Path) -> tuple[list[dict[str, str]], list[str], np.ndarr
 def _select_features(feature_names: list[str], features: np.ndarray, feature_set: str) -> tuple[list[str], np.ndarray]:
     if feature_set == "all":
         indices = list(range(len(feature_names)))
+    elif feature_set == "optimized":
+        indices = [i for i, name in enumerate(feature_names) if name.startswith("optimized_")]
     else:
         prefix = f"{feature_set}_"
         indices = [i for i, name in enumerate(feature_names) if name.startswith(prefix)]
@@ -103,7 +105,17 @@ def main() -> None:
     parser.add_argument("--dataset", default="gesture_dataset.csv", help="CSV created by collect_gesture_dataset.py")
     parser.add_argument(
         "--feature-set",
-        choices=["raw", "geom", "corrected", "all"],
+        choices=[
+            "raw",
+            "geom",
+            "corrected",
+            "optimized",
+            "optimized_action",
+            "optimized_sparse",
+            "optimized_full",
+            "optimized_loss",
+            "all",
+        ],
         default="corrected",
         help="Feature subset to use for training.",
     )
