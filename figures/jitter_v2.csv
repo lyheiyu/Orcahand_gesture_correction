@@ -1,0 +1,5 @@
+dataset,feature_set,num_sequences,num_frames,velocity_mean,velocity_std,velocity_rms_mean,velocity_rms_std,acceleration_mean,acceleration_std,acceleration_rms_mean,acceleration_rms_std
+C:\D\projects\Orca robot hand\orca sim\orca_sim\gesture_sequence_dataset_optimized_v2.csv,raw,39,5409,0.443881,0.151504,0.556604,0.190940,0.595201,0.234918,0.725566,0.298652
+C:\D\projects\Orca robot hand\orca sim\orca_sim\gesture_sequence_dataset_optimized_v2.csv,corrected,39,5409,0.621456,0.213075,0.825054,0.257523,0.950898,0.364952,1.211761,0.428795
+C:\D\projects\Orca robot hand\orca sim\orca_sim\gesture_sequence_dataset_optimized_v2.csv,optimized_action,39,5409,0.334345,0.114152,0.418981,0.123196,0.357958,0.135613,0.451714,0.152076
+C:\D\projects\Orca robot hand\orca sim\orca_sim\gesture_sequence_dataset_optimized_v2.csv,optimized_full,39,5409,0.451672,0.217817,0.718990,0.319587,0.519420,0.276961,0.816888,0.383306

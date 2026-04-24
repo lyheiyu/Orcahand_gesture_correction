@@ -131,6 +131,7 @@ def _append_optimizer_headers(headers: list[str]) -> list[str]:
             "optimized_loss_palm",
             "optimized_loss_prior",
             "optimized_loss_temporal",
+            "optimized_loss_acceleration",
             "optimized_loss_default_pose",
             "optimized_loss_boundary",
         ]
@@ -158,8 +159,13 @@ def _append_optimizer_row(
     optimizer: MujocoHandPoseOptimizer,
     points: np.ndarray,
     prev_action: np.ndarray | None,
+    prev_prev_action: np.ndarray | None,
 ) -> tuple[list[float | str], np.ndarray]:
-    result = optimizer.optimize(points, prev_action=prev_action)
+    result = optimizer.optimize(
+        points,
+        prev_action=prev_action,
+        prev_prev_action=prev_prev_action,
+    )
     row.extend(float(v) for v in result.action)
     row.extend(float(v) for v in result.optimized_sparse_points.reshape(-1))
     row.extend(float(v) for v in result.optimized_full_points.reshape(-1))
@@ -170,6 +176,7 @@ def _append_optimizer_row(
             float(result.loss_terms["palm"]),
             float(result.loss_terms["prior"]),
             float(result.loss_terms["temporal"]),
+            float(result.loss_terms["acceleration"]),
             float(result.loss_terms["default_pose"]),
             float(result.loss_terms["boundary"]),
         ]
@@ -238,6 +245,7 @@ def main() -> None:
         need_header = not output_path.exists()
         optimizer = MujocoHandPoseOptimizer(version=args.version) if args.export_optimized else None
         prev_optimized_action: np.ndarray | None = None
+        prev_prev_optimized_action: np.ndarray | None = None
 
         if MP_BACKEND == "solutions":
             tracker = mp_hands.Hands(
@@ -356,12 +364,15 @@ def main() -> None:
                             points,
                         )
                         if optimizer is not None:
+                            old_prev_action = prev_optimized_action
                             row, prev_optimized_action = _append_optimizer_row(
                                 row,
                                 optimizer,
                                 points,
                                 prev_optimized_action,
+                                prev_prev_optimized_action,
                             )
+                            prev_prev_optimized_action = old_prev_action
                         writer.writerow(row)
                         fh.flush()
                         saved += 1
@@ -375,12 +386,14 @@ def main() -> None:
                             if recording:
                                 recording = False
                                 prev_optimized_action = None
+                                prev_prev_optimized_action = None
                             else:
                                 sequence_id = args.sequence_id or uuid.uuid4().hex[:12]
                                 sequence_frame_id = 0
                                 tracked_frame_counter = 0
                                 sequence_start_time = time.perf_counter()
                                 prev_optimized_action = None
+                                prev_prev_optimized_action = None
                                 recording = True
                         elif points is not None:
                             row = _row_from_points(
@@ -392,12 +405,15 @@ def main() -> None:
                                 points,
                             )
                             if optimizer is not None:
+                                old_prev_action = prev_optimized_action
                                 row, prev_optimized_action = _append_optimizer_row(
                                     row,
                                     optimizer,
                                     points,
                                     prev_optimized_action,
+                                    prev_prev_optimized_action,
                                 )
+                                prev_prev_optimized_action = old_prev_action
                             writer.writerow(row)
                             fh.flush()
                             saved += 1

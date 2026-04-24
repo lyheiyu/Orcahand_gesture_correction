@@ -3,8 +3,19 @@ import csv
 from pathlib import Path
 
 import numpy as np
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    cohen_kappa_score,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+)
 from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
@@ -66,6 +77,138 @@ def _few_shot_subset(
     return x_train[keep_indices], [y_train[i] for i in keep_indices]
 
 
+def _compute_scores(y_true: list[str], y_pred: np.ndarray) -> dict[str, float]:
+    return {
+        "accuracy": float(accuracy_score(y_true, y_pred)),
+        "macro_f1": float(f1_score(y_true, y_pred, average="macro", zero_division=0)),
+        "weighted_f1": float(f1_score(y_true, y_pred, average="weighted", zero_division=0)),
+        "macro_precision": float(precision_score(y_true, y_pred, average="macro", zero_division=0)),
+        "macro_recall": float(recall_score(y_true, y_pred, average="macro", zero_division=0)),
+        "cohen_kappa": float(cohen_kappa_score(y_true, y_pred)),
+    }
+
+
+def _mean_std(score_rows: list[dict[str, float]], metric_name: str) -> tuple[float, float]:
+    values = np.asarray([row[metric_name] for row in score_rows], dtype=np.float64)
+    return float(np.mean(values)), float(np.std(values))
+
+
+def _plot_confusion_matrix(
+    cm: np.ndarray,
+    labels: list[str],
+    title: str,
+    output_path: Path,
+) -> None:
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    row_sums = cm.sum(axis=1, keepdims=True)
+    normalized = np.divide(cm, row_sums, out=np.zeros_like(cm, dtype=np.float64), where=row_sums != 0)
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=(6.4, 5.4), dpi=180)
+    image = ax.imshow(normalized, interpolation="nearest", cmap="Blues", vmin=0.0, vmax=1.0)
+    fig.colorbar(image, ax=ax, fraction=0.046, pad=0.04)
+
+    ax.set_title(title, fontsize=13, fontweight="bold")
+    ax.set_xlabel("Predicted label")
+    ax.set_ylabel("True label")
+    ax.set_xticks(np.arange(len(labels)))
+    ax.set_yticks(np.arange(len(labels)))
+    ax.set_xticklabels(labels)
+    ax.set_yticklabels(labels)
+
+    threshold = 0.5
+    for row_index in range(cm.shape[0]):
+        for col_index in range(cm.shape[1]):
+            value = normalized[row_index, col_index]
+            count = cm[row_index, col_index]
+            color = "white" if value > threshold else "black"
+            ax.text(
+                col_index,
+                row_index,
+                f"{value:.2f}\n({count})",
+                ha="center",
+                va="center",
+                color=color,
+                fontsize=10,
+            )
+
+    fig.tight_layout()
+    fig.savefig(output_path, bbox_inches="tight")
+    plt.close(fig)
+
+
+def _append_results_csv(
+    output_path: Path,
+    row: dict[str, object],
+) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    row_keys = list(row.keys())
+    existing_rows: list[dict[str, str]] = []
+    fieldnames = row_keys.copy()
+
+    if output_path.exists():
+        with output_path.open("r", newline="", encoding="utf-8") as fh:
+            reader = csv.DictReader(fh)
+            existing_fieldnames = reader.fieldnames or []
+            existing_rows = list(reader)
+        fieldnames = existing_fieldnames.copy()
+        for key in row_keys:
+            if key not in fieldnames:
+                fieldnames.append(key)
+
+    normalized_existing_rows: list[dict[str, object]] = []
+    for existing_row in existing_rows:
+        normalized_existing_rows.append({key: existing_row.get(key, "") for key in fieldnames})
+
+    normalized_new_row = {key: row.get(key, "") for key in fieldnames}
+
+    with output_path.open("w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(normalized_existing_rows)
+        writer.writerow(normalized_new_row)
+
+
+def _build_model(args: argparse.Namespace, seed: int) -> Pipeline:
+    if args.classifier == "svm":
+        estimator = SVC(kernel="rbf", C=args.c, gamma=args.gamma)
+    elif args.classifier == "knn":
+        estimator = KNeighborsClassifier(
+            n_neighbors=args.knn_neighbors,
+            weights=args.knn_weights,
+        )
+    elif args.classifier == "rf":
+        estimator = RandomForestClassifier(
+            n_estimators=args.rf_estimators,
+            max_depth=args.rf_max_depth if args.rf_max_depth > 0 else None,
+            random_state=seed,
+        )
+    elif args.classifier == "mlp":
+        hidden_layer_sizes = tuple(int(part.strip()) for part in args.mlp_hidden_sizes.split(",") if part.strip())
+        if not hidden_layer_sizes:
+            raise SystemExit("--mlp-hidden-sizes must contain at least one integer.")
+        estimator = MLPClassifier(
+            hidden_layer_sizes=hidden_layer_sizes,
+            alpha=args.mlp_alpha,
+            learning_rate_init=args.mlp_learning_rate,
+            max_iter=args.mlp_max_iter,
+            random_state=seed,
+        )
+    else:
+        raise SystemExit(f"Unsupported classifier `{args.classifier}`.")
+
+    return Pipeline(
+        [
+            ("scaler", StandardScaler()),
+            ("model", estimator),
+        ]
+    )
+
+
 def _sequence_aggregate(
     row_meta: list[dict[str, str]],
     features: np.ndarray,
@@ -101,7 +244,7 @@ def _sequence_aggregate(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Train an SVM baseline on gesture CSV features.")
+    parser = argparse.ArgumentParser(description="Train a classifier baseline on gesture CSV features.")
     parser.add_argument("--dataset", default="gesture_dataset.csv", help="CSV created by collect_gesture_dataset.py")
     parser.add_argument(
         "--feature-set",
@@ -121,8 +264,36 @@ def main() -> None:
     )
     parser.add_argument("--test-size", type=float, default=0.2, help="Holdout ratio.")
     parser.add_argument("--random-state", type=int, default=42, help="Random seed.")
+    parser.add_argument(
+        "--classifier",
+        choices=["svm", "knn", "rf", "mlp"],
+        default="svm",
+        help="Classifier to train.",
+    )
     parser.add_argument("--c", type=float, default=5.0, help="SVM C parameter.")
     parser.add_argument("--gamma", default="scale", help="SVM gamma parameter.")
+    parser.add_argument("--knn-neighbors", type=int, default=3, help="KNN number of neighbors.")
+    parser.add_argument(
+        "--knn-weights",
+        choices=["uniform", "distance"],
+        default="distance",
+        help="KNN weighting scheme.",
+    )
+    parser.add_argument("--rf-estimators", type=int, default=200, help="RandomForest number of trees.")
+    parser.add_argument(
+        "--rf-max-depth",
+        type=int,
+        default=0,
+        help="RandomForest max depth. Use 0 for no depth limit.",
+    )
+    parser.add_argument(
+        "--mlp-hidden-sizes",
+        default="128,64",
+        help="Comma-separated hidden layer sizes for MLP, for example 128,64.",
+    )
+    parser.add_argument("--mlp-alpha", type=float, default=1e-4, help="MLP L2 regularization strength.")
+    parser.add_argument("--mlp-learning-rate", type=float, default=1e-3, help="MLP initial learning rate.")
+    parser.add_argument("--mlp-max-iter", type=int, default=1200, help="MLP max iterations.")
     parser.add_argument(
         "--shots-per-class",
         type=int,
@@ -139,6 +310,21 @@ def main() -> None:
         "--sequence-mode",
         action="store_true",
         help="Group rows by sequence_id and aggregate each full sequence into one sample.",
+    )
+    parser.add_argument(
+        "--plot-confusion",
+        default="",
+        help="Optional output path for a normalized confusion matrix PNG.",
+    )
+    parser.add_argument(
+        "--confusion-title",
+        default="",
+        help="Optional title for the confusion matrix figure.",
+    )
+    parser.add_argument(
+        "--results-csv",
+        default="",
+        help="Optional CSV path. Appends one summary row for this run.",
     )
     args = parser.parse_args()
 
@@ -161,11 +347,15 @@ def main() -> None:
             + [f"max_{name}" for name in selected_names]
             + [f"delta_{name}" for name in selected_names]
         )
-    accuracies: list[float] = []
+    score_rows: list[dict[str, float]] = []
     last_report = ""
     last_confusion = None
+    aggregate_confusion: np.ndarray | None = None
+    aggregate_y_true: list[str] = []
+    aggregate_y_pred: list[str] = []
     last_num_train = 0
     last_num_test = 0
+    class_labels = sorted(set(labels))
 
     for repeat_index in range(args.repeats):
         seed = args.random_state + repeat_index
@@ -181,22 +371,24 @@ def main() -> None:
             rng = np.random.RandomState(seed)
             x_train, y_train = _few_shot_subset(x_train, y_train, args.shots_per_class, rng)
 
-        model = Pipeline(
-            [
-                ("scaler", StandardScaler()),
-                ("svm", SVC(kernel="rbf", C=args.c, gamma=args.gamma)),
-            ]
-        )
+        model = _build_model(args, seed)
         model.fit(x_train, y_train)
         y_pred = model.predict(x_test)
 
-        accuracies.append(float(np.mean(np.asarray(y_pred) == np.asarray(y_test))))
-        last_report = classification_report(y_test, y_pred, digits=4)
-        last_confusion = confusion_matrix(y_test, y_pred)
+        score_rows.append(_compute_scores(y_test, y_pred))
+        aggregate_y_true.extend(y_test)
+        aggregate_y_pred.extend(str(label) for label in y_pred)
+        last_report = classification_report(y_test, y_pred, labels=class_labels, digits=4, zero_division=0)
+        last_confusion = confusion_matrix(y_test, y_pred, labels=class_labels)
+        if aggregate_confusion is None:
+            aggregate_confusion = last_confusion.copy()
+        else:
+            aggregate_confusion += last_confusion
         last_num_train = len(y_train)
         last_num_test = len(y_test)
 
     print(f"dataset={dataset_path}")
+    print(f"classifier={args.classifier}")
     print(f"feature_set={args.feature_set}")
     print(f"num_features={len(selected_names)}")
     print(f"num_train={last_num_train} num_test={last_num_test}")
@@ -204,12 +396,73 @@ def main() -> None:
     if args.shots_per_class > 0:
         print(f"shots_per_class={args.shots_per_class}")
     print(f"repeats={args.repeats}")
-    print(f"accuracy_mean={np.mean(accuracies):.4f}")
-    print(f"accuracy_std={np.std(accuracies):.4f}")
+    for metric_name in [
+        "macro_recall",
+        "macro_f1",
+        "macro_precision",
+        "accuracy",
+        "cohen_kappa",
+        "weighted_f1",
+    ]:
+        mean, std = _mean_std(score_rows, metric_name)
+        print(f"{metric_name}_mean={mean:.4f}")
+        print(f"{metric_name}_std={std:.4f}")
     print()
+    print("Aggregate classification report across repeats:")
+    print(classification_report(aggregate_y_true, aggregate_y_pred, labels=class_labels, digits=4, zero_division=0))
+    print("Last-repeat classification report:")
     print(last_report)
-    print("Confusion matrix:")
+    print("Last-repeat confusion matrix:")
     print(last_confusion)
+    print("Aggregate confusion matrix across repeats:")
+    print(aggregate_confusion)
+
+    if args.plot_confusion:
+        if aggregate_confusion is None:
+            raise SystemExit("No confusion matrix was generated.")
+        confusion_path = Path(args.plot_confusion).resolve()
+        title = args.confusion_title or f"{args.feature_set} aggregate confusion matrix"
+        _plot_confusion_matrix(aggregate_confusion, class_labels, title, confusion_path)
+        print(f"confusion_plot={confusion_path}")
+
+    if args.results_csv:
+        csv_path = Path(args.results_csv).resolve()
+        result_row: dict[str, object] = {
+            "dataset": str(dataset_path),
+            "classifier": args.classifier,
+            "feature_set": args.feature_set,
+            "num_features": len(selected_names),
+            "num_train": last_num_train,
+            "num_test": last_num_test,
+            "sequence_mode": "yes" if args.sequence_mode else "no",
+            "shots_per_class": args.shots_per_class,
+            "repeats": args.repeats,
+            "test_size": args.test_size,
+            "random_state": args.random_state,
+            "c": args.c,
+            "gamma": args.gamma,
+            "knn_neighbors": args.knn_neighbors,
+            "knn_weights": args.knn_weights,
+            "rf_estimators": args.rf_estimators,
+            "rf_max_depth": args.rf_max_depth,
+            "mlp_hidden_sizes": args.mlp_hidden_sizes,
+            "mlp_alpha": args.mlp_alpha,
+            "mlp_learning_rate": args.mlp_learning_rate,
+            "mlp_max_iter": args.mlp_max_iter,
+        }
+        for metric_name in [
+            "macro_recall",
+            "macro_f1",
+            "macro_precision",
+            "accuracy",
+            "cohen_kappa",
+            "weighted_f1",
+        ]:
+            mean, std = _mean_std(score_rows, metric_name)
+            result_row[f"{metric_name}_mean"] = f"{mean:.6f}"
+            result_row[f"{metric_name}_std"] = f"{std:.6f}"
+        _append_results_csv(csv_path, result_row)
+        print(f"results_csv={csv_path}")
 
 
 if __name__ == "__main__":

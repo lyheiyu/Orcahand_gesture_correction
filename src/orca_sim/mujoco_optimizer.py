@@ -35,8 +35,10 @@ class OptimizationWeights:
     palm: float = 0.2
     prior: float = 0.3
     temporal: float = 0.1
+    acceleration: float = 0.15
     default_pose: float = 0.15
     boundary: float = 0.05
+    huber_delta: float = 0.08
 
 
 @dataclass
@@ -97,6 +99,7 @@ class MujocoHandPoseOptimizer:
         *,
         initial_action: np.ndarray | None = None,
         prev_action: np.ndarray | None = None,
+        prev_prev_action: np.ndarray | None = None,
         weights: OptimizationWeights | None = None,
         max_iterations: int = 120,
     ) -> OptimizationResult:
@@ -113,17 +116,23 @@ class MujocoHandPoseOptimizer:
         if prev_action is not None:
             prev_action = np.asarray(prev_action, dtype=np.float64).copy()
 
+        if prev_prev_action is not None:
+            prev_prev_action = np.asarray(prev_prev_action, dtype=np.float64).copy()
+
         initial_action = np.clip(initial_action, self.env.action_low, self.env.action_high)
 
         def loss_terms(action: np.ndarray) -> dict[str, float]:
             current_sparse, current_palm = self._forward_sparse_points(action)
-            landmark_loss = self._landmark_loss(current_sparse, target_sparse)
+            landmark_loss = self._landmark_loss(current_sparse, target_sparse, weights.huber_delta)
             palm_loss = float(np.sum((current_palm - target_palm) ** 2))
             prior_loss = float(np.sum((action - initial_action) ** 2))
             default_pose_loss = float(np.sum((action - self._default_action) ** 2))
             temporal_loss = 0.0
             if prev_action is not None:
                 temporal_loss = float(np.sum((action - prev_action) ** 2))
+            acceleration_loss = 0.0
+            if prev_action is not None and prev_prev_action is not None:
+                acceleration_loss = float(np.sum((action - (2.0 * prev_action) + prev_prev_action) ** 2))
             normalized = (action - self.env.action_low) / np.maximum(
                 self.env.action_high - self.env.action_low, 1e-6
             )
@@ -135,6 +144,7 @@ class MujocoHandPoseOptimizer:
                 + weights.palm * palm_loss
                 + weights.prior * prior_loss
                 + weights.temporal * temporal_loss
+                + weights.acceleration * acceleration_loss
                 + weights.default_pose * default_pose_loss
                 + weights.boundary * boundary_loss
             )
@@ -143,6 +153,7 @@ class MujocoHandPoseOptimizer:
                 "palm": palm_loss,
                 "prior": prior_loss,
                 "temporal": temporal_loss,
+                "acceleration": acceleration_loss,
                 "default_pose": default_pose_loss,
                 "boundary": boundary_loss,
                 "total": float(total),
@@ -368,8 +379,16 @@ class MujocoHandPoseOptimizer:
         self,
         predicted: dict[str, np.ndarray],
         target: dict[str, np.ndarray],
+        huber_delta: float,
     ) -> float:
         total = 0.0
         for label in self._POINT_LABELS:
-            total += float(np.sum((predicted[label] - target[label]) ** 2))
+            residual = predicted[label] - target[label]
+            if huber_delta <= 0.0:
+                total += float(np.sum(residual**2))
+                continue
+            absolute = np.abs(residual)
+            quadratic = np.minimum(absolute, huber_delta)
+            linear = absolute - quadratic
+            total += float(np.sum((0.5 * quadratic**2) + (huber_delta * linear)))
         return total

@@ -27,6 +27,7 @@ teleop = [
 ]
 ml = [
   "scikit-learn>=1.5",
+  "matplotlib>=3.8",
 ]
 optimize = [
   "scipy>=1.13",

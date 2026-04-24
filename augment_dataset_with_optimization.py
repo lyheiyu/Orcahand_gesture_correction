@@ -27,6 +27,7 @@ def _optimizer_headers() -> list[str]:
             "optimized_loss_palm",
             "optimized_loss_prior",
             "optimized_loss_temporal",
+            "optimized_loss_acceleration",
             "optimized_loss_default_pose",
             "optimized_loss_boundary",
         ]
@@ -68,16 +69,24 @@ def main() -> None:
             with MujocoHandPoseOptimizer(version=args.version) as optimizer:
                 prev_sequence_id: str | None = None
                 prev_action: np.ndarray | None = None
+                prev_prev_action: np.ndarray | None = None
 
                 for row in reader:
                     sequence_id = row.get("sequence_id", "")
                     if sequence_id != prev_sequence_id:
                         prev_action = None
+                        prev_prev_action = None
                         prev_sequence_id = sequence_id
 
                     points = _extract_points(row, raw_names)
-                    result = optimizer.optimize(points, prev_action=prev_action)
+                    result = optimizer.optimize(
+                        points,
+                        prev_action=prev_action,
+                        prev_prev_action=prev_prev_action,
+                    )
+                    old_prev_action = prev_action
                     prev_action = result.action.astype(np.float64)
+                    prev_prev_action = old_prev_action
 
                     out_row = {name: row.get(name, "") for name in passthrough_fields}
                     for index, value in enumerate(result.action):
@@ -91,6 +100,7 @@ def main() -> None:
                     out_row["optimized_loss_palm"] = float(result.loss_terms["palm"])
                     out_row["optimized_loss_prior"] = float(result.loss_terms["prior"])
                     out_row["optimized_loss_temporal"] = float(result.loss_terms["temporal"])
+                    out_row["optimized_loss_acceleration"] = float(result.loss_terms["acceleration"])
                     out_row["optimized_loss_default_pose"] = float(result.loss_terms["default_pose"])
                     out_row["optimized_loss_boundary"] = float(result.loss_terms["boundary"])
                     writer.writerow(out_row)
