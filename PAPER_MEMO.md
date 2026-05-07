@@ -874,3 +874,284 @@ optimized\_action\_v2 > corrected > PCA17 > raw
 当前项目最值得记录的结论是：
 
 **在 ORCA actuator 空间中进行鲁棒时序 MuJoCo 优化，可以得到比原始 MediaPipe landmarks 和启发式 corrected 表示更平滑、更适合 few-shot sequence 手势识别的 latent actuator representation。**
+
+## `corrected` 与 `optimized_action` 的核心解释
+
+这一部分是后续写论文 `Method` 时最重要的概念区分。
+
+### 1. `corrected` 是什么
+
+`corrected` 不是学习出来的 embedding，也不是 MuJoCo 优化结果。
+
+它本质上是：
+
+**把 noisy MediaPipe landmarks 按照 ORCA 机器手的结构语义，映射成一个 17 维 actuator-space 表示。**
+
+设第 \(t\) 帧 MediaPipe 观测为：
+
+\[
+\mathbf{y}_t \in \mathbb{R}^{21 \times 3}
+\]
+
+或展开成：
+
+\[
+\mathbf{y}_t \in \mathbb{R}^{63}
+\]
+
+`corrected` 通过手工设计的几何映射函数 \(g(\cdot)\)，提取：
+
+- 手腕方向
+- 手指弯曲程度
+- 手指张开程度
+- 拇指打开程度
+- 掌面法向
+
+然后将它们映射到 ORCA actuator 空间：
+
+\[
+\tilde{\mathbf{q}}_t = g(\mathbf{y}_t), \qquad \tilde{\mathbf{q}}_t \in \mathbb{R}^{17}
+\]
+
+因此，`corrected` 的本质不是普通 PCA 式降维，而是：
+
+**embodiment-constrained reparameterization**
+
+或者：
+
+**semantic geometric projection into ORCA actuator space**
+
+它的优点是：
+
+- 从 63 维降到 17 维
+- 表示更结构化
+- 每一维有明确的 actuator / joint 语义
+- few-shot 下更容易分类
+
+它的局限是：
+
+- 仍然是逐帧映射
+- 本质仍是 \(\tilde{\mathbf{q}}_t = g(\mathbf{y}_t)\)
+- 没有真正求解最优物理状态
+- 对单帧异常漂移的抑制能力有限
+
+一句话总结：
+
+**`corrected` 是基于 ORCA 结构先验的启发式低维映射。**
+
+### 2. `optimized_action` 是什么
+
+`optimized_action` 建立在 `corrected` 的基础上，但它不再是直接映射，而是：
+
+**在 ORCA actuator latent space 中，通过 MuJoCo forward kinematics 做鲁棒约束优化，求得更可信的潜在手状态。**
+
+设 ORCA latent hand state 为：
+
+\[
+\mathbf{q}_t \in \mathbb{R}^{17}
+\]
+
+MuJoCo 前向映射为：
+
+\[
+\hat{\mathbf{y}}_t = h(\mathbf{q}_t)
+\]
+
+其中 \(h(\cdot)\) 表示：给定一个 ORCA actuator state，MuJoCo 生成该状态下对应的 hand landmarks / sparse points。
+
+于是 `optimized_action` 不是直接算：
+
+\[
+\tilde{\mathbf{q}}_t = g(\mathbf{y}_t)
+\]
+
+而是求解：
+
+\[
+\mathbf{q}_t^*
+=
+\arg\min_{\mathbf{q}_t \in \mathcal{Q}}
+\mathcal{L}(\mathbf{q}_t)
+\]
+
+其中 \(\mathcal{Q}\) 是 actuator 的可行域。
+
+### 3. `optimized_action` 的目标函数含义
+
+当前增强版目标函数为：
+
+\[
+\mathbf{q}_t^* = \arg\min_{\mathbf{q}_t \in \mathcal{Q}}
+\lambda_l \mathcal{L}_{huber}
++ \lambda_n \mathcal{L}_{normal}
++ \lambda_p \mathcal{L}_{prior}
++ \lambda_s \mathcal{L}_{temporal}
++ \lambda_a \mathcal{L}_{acceleration}
++ \lambda_d \mathcal{L}_{default}
++ \lambda_b \mathcal{L}_{boundary}
+\]
+
+各项含义如下：
+
+#### 3.1 Huber landmark loss
+
+这项让 MuJoCo 生成的 landmarks 去拟合 MediaPipe 观测，但对异常漂移点更鲁棒。
+
+\[
+\rho_\delta(r)
+=
+\begin{cases}
+\frac{1}{2}r^2, & |r| \le \delta \\
+\delta(|r|-\frac{1}{2}\delta), & |r| > \delta
+\end{cases}
+\]
+
+意义：
+
+- 小误差时像 L2，正常拟合
+- 大误差时像 L1，抑制 outlier
+
+#### 3.2 Palm normal loss
+
+\[
+\mathcal{L}_{normal}
+=
+\|\mathbf{n}_{orca}(\mathbf{q}_t)-\mathbf{n}_{mp}(\mathbf{y}_t)\|_2^2
+\]
+
+意义：
+
+- 不只拟合点位置
+- 还要求掌面朝向一致
+
+#### 3.3 Prior loss
+
+把 `corrected` 当作启发式先验：
+
+\[
+\mathcal{L}_{prior}
+=
+\|\mathbf{q}_t - \tilde{\mathbf{q}}_t\|_2^2
+\]
+
+意义：
+
+- `corrected` 提供合理初始化
+- 优化不要偏离结构化几何估计太远
+
+#### 3.4 Temporal loss
+
+\[
+\mathcal{L}_{temporal}
+=
+\|\mathbf{q}_t - \mathbf{q}_{t-1}^*\|_2^2
+\]
+
+意义：
+
+- 抑制相邻帧乱跳
+- 让状态变化更连续
+
+#### 3.5 Acceleration loss
+
+\[
+\mathcal{L}_{acceleration}
+=
+\|\mathbf{q}_t - 2\mathbf{q}_{t-1}^* + \mathbf{q}_{t-2}^*\|_2^2
+\]
+
+意义：
+
+- 惩罚一闪而过的瞬时跳变
+- 抑制二阶时间不连续
+- 非常适合对抗 MediaPipe 的单帧漂移和短时抖动
+
+#### 3.6 Default pose loss
+
+意义：
+
+- 防止解跑到特别极端、特别不自然的位置
+- 给优化一个温和稳定中心
+
+#### 3.7 Boundary loss
+
+意义：
+
+- 防止 actuator 长期贴在边界
+- 提高解的物理可行性
+
+### 4. `corrected` 和 `optimized_action` 的根本区别
+
+`corrected`：
+
+\[
+\tilde{\mathbf{q}}_t = g(\mathbf{y}_t)
+\]
+
+特点：
+
+- 直接映射
+- 速度快
+- 结构化低维
+- 但本质还是逐帧
+
+`optimized_action`：
+
+\[
+\mathbf{q}_t^*
+=
+\arg\min
+\mathcal{L}(\mathbf{q}_t,\mathbf{y}_t,\mathbf{q}_{t-1}^*,\mathbf{q}_{t-2}^*)
+\]
+
+特点：
+
+- 优化求解
+- 受 MuJoCo forward kinematics 约束
+- 有 prior、法向、默认姿态、边界约束
+- 有 temporal / acceleration 正则
+- 对异常观测更鲁棒
+
+因此：
+
+- `corrected` 更像 **rule-based structured projection**
+- `optimized_action` 更像 **physics-constrained robust temporal state estimation**
+
+### 5. 为什么 `optimized_action` 往往比 `optimized_full` 更适合分类
+
+`optimized_action` 是 17 维 latent actuator state：
+
+\[
+\mathbf{q}_t^* \in \mathbb{R}^{17}
+\]
+
+`optimized_full` 是再投影回 63 维 landmark 坐标：
+
+\[
+\mathbf{y}_t^* = h(\mathbf{q}_t^*)
+\]
+
+当前实验说明，对分类来说更有用的往往不是最完整的高维重建，而是：
+
+- 低维
+- 结构化
+- 噪声更少
+- few-shot 下更不容易过拟合
+
+这也是为什么当前反复观察到：
+
+\[
+optimized\_action > optimized\_full
+\]
+
+### 6. 最简洁的表述方式
+
+后续论文里最推荐这样解释：
+
+- `corrected`：**a heuristic embodiment-aware projection into ORCA actuator space**
+- `optimized_action`：**a MuJoCo-constrained robust temporally regularized latent hand state**
+
+或者更口语一点：
+
+- `corrected` 是“基于 ORCA 结构先验的启发式低维映射”
+- `optimized_action` 是“基于 MuJoCo 约束优化的鲁棒时序潜在状态估计”
