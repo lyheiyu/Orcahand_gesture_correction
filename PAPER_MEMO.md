@@ -2,7 +2,25 @@
 
 ## 暂定题目
 
-基于 ORCA 结构先验与 MuJoCo 鲁棒时序优化的手势表示研究
+**Robust Hand Landmark Denoising via MuJoCo-Constrained Temporal Optimization**
+
+这个标题目前最稳，原因是：
+
+- `Robust` 对应当前问题里的漂移、抖动和瞬时异常跳变
+- `Hand Landmark Denoising` 明确了输入输出对象是 noisy hand landmarks，而不是泛化的 gesture semantics
+- `MuJoCo-Constrained Temporal Optimization` 准确描述了方法核心：不是普通滤波，而是在 ORCA actuator latent space 中做受 MuJoCo forward kinematics 约束的时序优化
+
+相比 `gesture denoising`，`landmark denoising` 更精确，也更贴近当前代码和实验。
+
+## 摘要开头建议
+
+下面这句可以直接作为英文摘要中的关键 framing：
+
+**Unlike conventional temporal smoothing, the proposed denoising process is performed in an ORCA actuator space and constrained by MuJoCo forward kinematics, enabling physically plausible and temporally consistent refinement of noisy hand observations.**
+
+如果想更完整一点，也可以用这一段作为摘要前两句草稿：
+
+**Vision-based hand landmark estimators such as MediaPipe often suffer from frame-level jitter, drift, and transient outliers under challenging viewpoints and self-occlusion. To address this issue, we propose a MuJoCo-constrained temporal optimization framework that denoises noisy hand landmarks in an ORCA actuator space, producing physically plausible and temporally consistent latent hand trajectories.**
 
 ## 当前核心问题
 
@@ -16,6 +34,61 @@
 - ORCA actuator-space 是否能作为更好的低维结构化表示
 - MuJoCo 约束优化能否进一步缓解瞬时漂移
 - 更平滑的 latent actuator representation 是否能提升下游 few-shot sequence classification
+
+## 推荐论文结构
+
+当前最推荐采用紧凑版结构，把“单帧修复”作为主方法，把“sequence aggregation + classifier”明确放在下游评估位置：
+
+### 1. Introduction
+
+### 2. Related Work
+
+### 3. Method
+
+#### 3.1 Raw hand landmark extraction
+
+#### 3.2 Frame-level physical correction
+
+#### 3.3 Optimized action representation
+
+#### 3.4 Sequence-level statistical aggregation for downstream evaluation
+
+这里要特别强调：
+
+- `frame-level physical correction` 是主方法
+- `mean / std / max / delta` 是下游 sequence classification 的评估协议
+- sequence aggregation 不是单帧修复本体
+
+### 4. Experiments and Results
+
+#### 4.1 Dataset and gesture classes
+
+#### 4.2 Frame-level stability evaluation
+
+#### 4.3 Sequence-level few-shot classification
+
+#### 4.4 Classifier comparison
+
+#### 4.5 Ablation study
+
+### 5. Discussion
+
+#### 5.1 Why frame correction improves sequence classification
+
+#### 5.2 Reconstruction vs. discriminative representation
+
+#### 5.3 Limitation of statistical aggregation
+
+#### 5.4 Future work with stronger temporal models
+
+### 6. Conclusion
+
+这个结构的优点是：
+
+- 主次清楚：先讲单帧修复，再讲下游分类验证
+- 论文故事紧凑：不把统计聚合误写成主方法
+- 审稿逻辑顺：先证明更稳，再证明更好分类
+- 便于以后扩展：后续如果补 GRU/LSTM baseline，可以自然放进 Discussion 或新的实验小节
 
 ## 当前方法结构
 
@@ -497,7 +570,7 @@ MuJoCo 前向映射为：
 - few-shot setting
 - `shots_per_class = 3`
 - `repeats = 20`
-- 分类器：`SVM`
+- 分类器：`SVM`, `KNN`, `RandomForest`, `MLP`
 - 类别：`6`, `7`, `8`
 - 数据集：`gesture_sequence_dataset_optimized_v2.csv`
 
@@ -560,6 +633,45 @@ optimized\_action\_v2 > corrected > optimized\_full\_v2
 \[
 optimized\_action\_v2 > corrected > optimized\_full\_v2 > raw
 \]
+
+### 3. Multi-Classifier Comparison
+
+后续补充的多分类器实验表明，当前观察并不是单一分类器偶然造成的。基于 `gesture_sequence_dataset_optimized_v2.csv`，`shots_per_class = 3`，`repeats = 20`：
+
+#### SVM
+
+- `raw`: `accuracy = 0.6313`, `macro_f1 = 0.6145`, `kappa = 0.4401`
+- `corrected`: `accuracy = 0.8063`, `macro_f1 = 0.7808`, `kappa = 0.7025`
+- `optimized_action_v2`: `accuracy = 0.8500`, `macro_f1 = 0.8290`, `kappa = 0.7674`
+- `optimized_full_v2`: `accuracy = 0.7125`, `macro_f1 = 0.6723`, `kappa = 0.5675`
+
+#### KNN
+
+- `raw`: `accuracy = 0.5875`, `macro_f1 = 0.5392`, `kappa = 0.3595`
+- `corrected`: `accuracy = 0.7875`, `macro_f1 = 0.7671`, `kappa = 0.6822`
+- `optimized_action_v2`: `accuracy = 0.8063`, `macro_f1 = 0.7802`, `kappa = 0.7114`
+- `optimized_full_v2`: `accuracy = 0.6375`, `macro_f1 = 0.6120`, `kappa = 0.4528`
+
+#### RandomForest
+
+- `raw`: `accuracy = 0.5938`, `macro_f1 = 0.5418`, `kappa = 0.3688`
+- `corrected`: `accuracy = 0.8688`, `macro_f1 = 0.8679`, `kappa = 0.8030`
+- `optimized_action_v2`: `accuracy = 0.8938`, `macro_f1 = 0.8834`, `kappa = 0.8395`
+- `optimized_full_v2`: `accuracy = 0.7625`, `macro_f1 = 0.7480`, `kappa = 0.6371`
+
+#### MLP
+
+- `raw`: `accuracy = 0.6250`, `macro_f1 = 0.5934`, `kappa = 0.4188`
+- `corrected`: `accuracy = 0.7625`, `macro_f1 = 0.7517`, `kappa = 0.6410`
+- `optimized_action_v2`: `accuracy = 0.8125`, `macro_f1 = 0.8013`, `kappa = 0.7148`
+- `optimized_full_v2`: `accuracy = 0.6875`, `macro_f1 = 0.6653`, `kappa = 0.5215`
+
+当前最重要的新发现是：
+
+- `optimized_action_v2` 在四个分类器中都保持强竞争力
+- `RandomForest + optimized_action_v2` 是目前最强组合
+- `corrected` 仍然稳定优于 `raw`
+- `optimized_full_v2` 通常不如 `optimized_action_v2`，支持“低维结构化 latent representation 优于高维重建坐标”的论点
 
 ## 当前最重要的发现
 
@@ -648,6 +760,8 @@ optimized\_action\_v2 > corrected > optimized\_full\_v2 > raw
 - 已经有清晰的研究故事
 - 已经有初步可重复的实验结果
 - 已经有 jitter 指标和 classification 指标的双重证据
+- 已经有多分类器对比结果
+- 已经有 macro-F1 / precision / recall / kappa 指标
 - 已经可以开始写论文 draft
 - 但还需要补充更多实验才能形成更强投稿版本
 
@@ -657,12 +771,11 @@ optimized\_action\_v2 > corrected > optimized\_full\_v2 > raw
 
 - sequence 数量还不够大
 - 类别数还比较少
-- 目前主要只跑了 `SVM`
 - 还没有 PCA-17 baseline
-- 还没有多分类器比较
-- 还没有 macro-F1 mean/std
 - 还没有正式 ablation：Huber only / acceleration only / both
 - 优化仍然是 sparse correspondence fitting，不是完整动力学反演
+- 还没有真正的时序模型 baseline（例如 GRU / LSTM）
+- 还没有跨 session 或跨采集条件泛化验证
 
 ## 下一步必须做的实验
 
@@ -689,13 +802,16 @@ optimized\_action\_v2 > corrected > PCA17 > raw
 
 ### 2. Macro-F1 and Weighted-F1
 
-当前只有 accuracy mean/std。下一步需要输出：
+这一步已经完成。当前脚本已经输出：
 
 - `accuracy_mean/std`
 - `macro_f1_mean/std`
 - `weighted_f1_mean/std`
+- `macro_precision_mean/std`
+- `macro_recall_mean/std`
+- `cohen_kappa_mean/std`
 
-这对小样本、多类别数据更公平。
+这对小样本、多类别数据更公平。下一步更值得做的是把这些指标系统整理成论文总表和主结果图。
 
 ### 3. Ablation Study
 
@@ -717,16 +833,17 @@ optimized\_action\_v2 > corrected > PCA17 > raw
 
 ### 4. More Classifiers
 
-至少补充：
+这一步已经完成。当前已经比较：
 
 - `SVM`
 - `KNN`
 - `RandomForest`
 - `MLP`
 
-目的：
+结果说明当前趋势不是单一分类器偶然造成的。下一步可以考虑：
 
-确认结果不是某一个分类器偶然偏好。
+- 增加一个轻量时序 baseline
+- 对分类器超参数做更系统的 sensitivity analysis
 
 ### 5. More Data
 
@@ -745,6 +862,7 @@ optimized\_action\_v2 > corrected > PCA17 > raw
 - `acceleration_mean`
 - `accuracy_mean`
 - `macro_f1_mean`
+- `kappa_mean`
 
 这样可以证明方法同时提升：
 

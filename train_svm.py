@@ -17,6 +17,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
+from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
@@ -52,6 +53,8 @@ def _select_features(feature_names: list[str], features: np.ndarray, feature_set
         indices = [i for i, name in enumerate(feature_names) if name.startswith(prefix)]
     selected_names = [feature_names[i] for i in indices]
     selected_features = features[:, indices]
+    if selected_features.shape[1] == 0:
+        raise SystemExit(f"No columns found for feature set `{feature_set}`.")
     return selected_names, selected_features
 
 
@@ -75,6 +78,27 @@ def _few_shot_subset(
 
     keep_indices = sorted(keep_indices)
     return x_train[keep_indices], [y_train[i] for i in keep_indices]
+
+
+def _few_shot_index_subset(
+    train_indices: np.ndarray,
+    labels: list[str],
+    shots_per_class: int,
+    rng: np.random.RandomState,
+) -> np.ndarray:
+    train_labels = np.asarray([labels[index] for index in train_indices])
+    keep_positions: list[int] = []
+    for label in sorted(set(train_labels.tolist())):
+        class_positions = np.where(train_labels == label)[0]
+        if len(class_positions) < shots_per_class:
+            raise SystemExit(
+                f"Class `{label}` only has {len(class_positions)} training sequences, "
+                f"cannot keep {shots_per_class} shots per class."
+            )
+        chosen = rng.choice(class_positions, size=shots_per_class, replace=False)
+        keep_positions.extend(int(position) for position in chosen)
+    keep_positions = sorted(keep_positions)
+    return train_indices[keep_positions]
 
 
 def _compute_scores(y_true: list[str], y_pred: np.ndarray) -> dict[str, float]:
@@ -243,6 +267,60 @@ def _sequence_aggregate(
     return labels, np.stack(aggregated_rows, axis=0)
 
 
+def _group_sequences(
+    row_meta: list[dict[str, str]],
+    features: np.ndarray,
+) -> tuple[list[str], list[str], list[np.ndarray]]:
+    grouped: dict[str, list[tuple[int, float, np.ndarray]]] = {}
+    sequence_labels: dict[str, str] = {}
+
+    for index, (meta, feature_row) in enumerate(zip(row_meta, features, strict=True)):
+        sequence_id = meta.get("sequence_id") or f"single_{index}_{meta['label']}"
+        frame_id = int(meta.get("frame_id") or 0)
+        timestamp_sec = float(meta.get("timestamp_sec") or 0.0)
+        grouped.setdefault(sequence_id, []).append((frame_id, timestamp_sec, feature_row))
+        sequence_labels[sequence_id] = meta["label"]
+
+    sequence_ids: list[str] = []
+    labels: list[str] = []
+    sequences: list[np.ndarray] = []
+    for sequence_id in sorted(grouped):
+        entries = sorted(grouped[sequence_id], key=lambda item: (item[0], item[1]))
+        sequence = np.stack([item[2] for item in entries], axis=0).astype(np.float32)
+        sequence_ids.append(sequence_id)
+        labels.append(sequence_labels[sequence_id])
+        sequences.append(sequence)
+    return sequence_ids, labels, sequences
+
+
+def _aggregate_sequence_array(sequence: np.ndarray) -> np.ndarray:
+    mean = np.mean(sequence, axis=0)
+    std = np.std(sequence, axis=0)
+    maxv = np.max(sequence, axis=0)
+    start = sequence[0]
+    end = sequence[-1]
+    delta = end - start
+    return np.concatenate([mean, std, maxv, delta], axis=0).astype(np.float32)
+
+
+def _project_sequences_with_pca(
+    train_sequences: list[np.ndarray],
+    test_sequences: list[np.ndarray],
+    n_components: int,
+    seed: int,
+) -> tuple[list[np.ndarray], list[np.ndarray]]:
+    train_frames = np.concatenate(train_sequences, axis=0)
+    scaler = StandardScaler()
+    scaler.fit(train_frames)
+    pca = PCA(n_components=n_components, random_state=seed)
+    pca.fit(scaler.transform(train_frames))
+
+    def transform(sequence: np.ndarray) -> np.ndarray:
+        return pca.transform(scaler.transform(sequence)).astype(np.float32)
+
+    return [transform(sequence) for sequence in train_sequences], [transform(sequence) for sequence in test_sequences]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Train a classifier baseline on gesture CSV features.")
     parser.add_argument("--dataset", default="gesture_dataset.csv", help="CSV created by collect_gesture_dataset.py")
@@ -269,6 +347,12 @@ def main() -> None:
         choices=["svm", "knn", "rf", "mlp"],
         default="svm",
         help="Classifier to train.",
+    )
+    parser.add_argument(
+        "--pca-components",
+        type=int,
+        default=0,
+        help="If > 0, apply PCA to the selected frame-level features before classification. In sequence mode, PCA is fit on training frames only.",
     )
     parser.add_argument("--c", type=float, default=5.0, help="SVM C parameter.")
     parser.add_argument("--gamma", default="scale", help="SVM gamma parameter.")
@@ -337,16 +421,27 @@ def main() -> None:
         raise SystemExit("--shots-per-class must be >= 0.")
     if args.repeats < 1:
         raise SystemExit("--repeats must be >= 1.")
+    if args.pca_components < 0:
+        raise SystemExit("--pca-components must be >= 0.")
 
     selected_names, selected_features = _select_features(feature_names, features, args.feature_set)
-    if args.sequence_mode:
-        labels, selected_features = _sequence_aggregate(row_meta, selected_features)
-        selected_names = (
-            [f"mean_{name}" for name in selected_names]
-            + [f"std_{name}" for name in selected_names]
-            + [f"max_{name}" for name in selected_names]
-            + [f"delta_{name}" for name in selected_names]
+    if args.pca_components > 0 and args.pca_components > selected_features.shape[1]:
+        raise SystemExit(
+            f"--pca-components={args.pca_components} exceeds selected feature dimension {selected_features.shape[1]}."
         )
+
+    display_feature_set = args.feature_set
+    if args.pca_components > 0:
+        display_feature_set = f"{args.feature_set}_pca{args.pca_components}"
+
+    sequence_ids: list[str] = []
+    sequence_labels: list[str] = []
+    sequences: list[np.ndarray] = []
+    frame_level_labels = labels
+    if args.sequence_mode:
+        sequence_ids, sequence_labels, sequences = _group_sequences(row_meta, selected_features)
+        labels = sequence_labels
+
     score_rows: list[dict[str, float]] = []
     last_report = ""
     last_confusion = None
@@ -356,21 +451,59 @@ def main() -> None:
     last_num_train = 0
     last_num_test = 0
     class_labels = sorted(set(labels))
+    final_num_features = 0
 
     for repeat_index in range(args.repeats):
         seed = args.random_state + repeat_index
-        x_train, x_test, y_train, y_test = train_test_split(
-            selected_features,
-            labels,
-            test_size=args.test_size,
-            random_state=seed,
-            stratify=labels,
-        )
+        if args.sequence_mode:
+            all_indices = np.arange(len(sequences))
+            train_indices, test_indices = train_test_split(
+                all_indices,
+                test_size=args.test_size,
+                random_state=seed,
+                stratify=sequence_labels,
+            )
+            if args.shots_per_class > 0:
+                rng = np.random.RandomState(seed)
+                train_indices = _few_shot_index_subset(train_indices, sequence_labels, args.shots_per_class, rng)
 
-        if args.shots_per_class > 0:
-            rng = np.random.RandomState(seed)
-            x_train, y_train = _few_shot_subset(x_train, y_train, args.shots_per_class, rng)
+            train_sequences = [sequences[index] for index in train_indices]
+            test_sequences = [sequences[index] for index in test_indices]
+            y_train = [sequence_labels[index] for index in train_indices]
+            y_test = [sequence_labels[index] for index in test_indices]
 
+            if args.pca_components > 0:
+                train_sequences, test_sequences = _project_sequences_with_pca(
+                    train_sequences,
+                    test_sequences,
+                    args.pca_components,
+                    seed,
+                )
+
+            x_train = np.stack([_aggregate_sequence_array(sequence) for sequence in train_sequences], axis=0)
+            x_test = np.stack([_aggregate_sequence_array(sequence) for sequence in test_sequences], axis=0)
+        else:
+            x_train, x_test, y_train, y_test = train_test_split(
+                selected_features,
+                frame_level_labels,
+                test_size=args.test_size,
+                random_state=seed,
+                stratify=frame_level_labels,
+            )
+
+            if args.shots_per_class > 0:
+                rng = np.random.RandomState(seed)
+                x_train, y_train = _few_shot_subset(x_train, y_train, args.shots_per_class, rng)
+
+            if args.pca_components > 0:
+                scaler = StandardScaler()
+                x_train_scaled = scaler.fit_transform(x_train)
+                x_test_scaled = scaler.transform(x_test)
+                pca = PCA(n_components=args.pca_components, random_state=seed)
+                x_train = pca.fit_transform(x_train_scaled).astype(np.float32)
+                x_test = pca.transform(x_test_scaled).astype(np.float32)
+
+        final_num_features = int(x_train.shape[1])
         model = _build_model(args, seed)
         model.fit(x_train, y_train)
         y_pred = model.predict(x_test)
@@ -389,10 +522,11 @@ def main() -> None:
 
     print(f"dataset={dataset_path}")
     print(f"classifier={args.classifier}")
-    print(f"feature_set={args.feature_set}")
-    print(f"num_features={len(selected_names)}")
+    print(f"feature_set={display_feature_set}")
+    print(f"num_features={final_num_features}")
     print(f"num_train={last_num_train} num_test={last_num_test}")
     print(f"sequence_mode={'yes' if args.sequence_mode else 'no'}")
+    print(f"pca_components={args.pca_components}")
     if args.shots_per_class > 0:
         print(f"shots_per_class={args.shots_per_class}")
     print(f"repeats={args.repeats}")
@@ -421,7 +555,7 @@ def main() -> None:
         if aggregate_confusion is None:
             raise SystemExit("No confusion matrix was generated.")
         confusion_path = Path(args.plot_confusion).resolve()
-        title = args.confusion_title or f"{args.feature_set} aggregate confusion matrix"
+        title = args.confusion_title or f"{display_feature_set} aggregate confusion matrix"
         _plot_confusion_matrix(aggregate_confusion, class_labels, title, confusion_path)
         print(f"confusion_plot={confusion_path}")
 
@@ -430,8 +564,9 @@ def main() -> None:
         result_row: dict[str, object] = {
             "dataset": str(dataset_path),
             "classifier": args.classifier,
-            "feature_set": args.feature_set,
-            "num_features": len(selected_names),
+            "feature_set": display_feature_set,
+            "feature_set_base": args.feature_set,
+            "num_features": final_num_features,
             "num_train": last_num_train,
             "num_test": last_num_test,
             "sequence_mode": "yes" if args.sequence_mode else "no",
@@ -439,6 +574,7 @@ def main() -> None:
             "repeats": args.repeats,
             "test_size": args.test_size,
             "random_state": args.random_state,
+            "pca_components": args.pca_components,
             "c": args.c,
             "gamma": args.gamma,
             "knn_neighbors": args.knn_neighbors,

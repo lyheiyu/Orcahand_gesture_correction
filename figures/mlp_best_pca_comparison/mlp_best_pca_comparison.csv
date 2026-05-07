@@ -1,0 +1,6 @@
+classifier,feature_set,feature_set_base,pca_components,accuracy_mean,accuracy_std,macro_f1_mean,macro_f1_std,macro_precision_mean,macro_precision_std,macro_recall_mean,macro_recall_std,cohen_kappa_mean,cohen_kappa_std
+mlp,raw,raw,0,0.625000,0.181142,0.593360,0.209260,0.639008,0.217414,0.616667,0.195552,0.418845,0.286267
+mlp,raw_pca8,raw,8,0.868750,0.139614,0.855198,0.153525,0.886944,0.136934,0.863889,0.145376,0.799912,0.211299
+mlp,corrected,corrected,0,0.762500,0.176334,0.751706,0.179610,0.791944,0.182789,0.766667,0.174448,0.640983,0.268464
+mlp,optimized_action,optimized_action,0,0.812500,0.170018,0.801270,0.169490,0.836667,0.167888,0.811111,0.164242,0.714756,0.257648
+mlp,optimized_full,optimized_full,0,0.687500,0.195656,0.665278,0.208349,0.706667,0.218804,0.680556,0.205537,0.521522,0.303831
