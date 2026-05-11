@@ -2,25 +2,25 @@
 
 ## 暂定题目
 
-**Robust Hand Landmark Denoising via MuJoCo-Constrained Temporal Optimization**
+**Robust Hand Landmark Correction via MuJoCo-Constrained Temporal Optimization**
 
 这个标题目前最稳，原因是：
 
 - `Robust` 对应当前问题里的漂移、抖动和瞬时异常跳变
-- `Hand Landmark Denoising` 明确了输入输出对象是 noisy hand landmarks，而不是泛化的 gesture semantics
+- `Hand Landmark Correction` 明确了输入输出对象是 noisy hand landmarks，而不是泛化的 gesture semantics
 - `MuJoCo-Constrained Temporal Optimization` 准确描述了方法核心：不是普通滤波，而是在 ORCA actuator latent space 中做受 MuJoCo forward kinematics 约束的时序优化
 
-相比 `gesture denoising`，`landmark denoising` 更精确，也更贴近当前代码和实验。
+相比 `gesture denoising`，`landmark correction` 更精确，也更贴近当前代码和实验，因为它强调的是受结构约束的修正，而不是普通滤波。
 
 ## 摘要开头建议
 
 下面这句可以直接作为英文摘要中的关键 framing：
 
-**Unlike conventional temporal smoothing, the proposed denoising process is performed in an ORCA actuator space and constrained by MuJoCo forward kinematics, enabling physically plausible and temporally consistent refinement of noisy hand observations.**
+**Unlike conventional temporal smoothing, the proposed correction process is performed in an ORCA actuator space and constrained by MuJoCo forward kinematics, enabling physically plausible and temporally consistent refinement of noisy hand observations.**
 
 如果想更完整一点，也可以用这一段作为摘要前两句草稿：
 
-**Vision-based hand landmark estimators such as MediaPipe often suffer from frame-level jitter, drift, and transient outliers under challenging viewpoints and self-occlusion. To address this issue, we propose a MuJoCo-constrained temporal optimization framework that denoises noisy hand landmarks in an ORCA actuator space, producing physically plausible and temporally consistent latent hand trajectories.**
+**Vision-based hand landmark estimators such as MediaPipe often suffer from frame-level jitter, drift, and transient outliers under challenging viewpoints and self-occlusion. To address this issue, we propose a MuJoCo-constrained temporal optimization framework that corrects noisy hand landmarks in an ORCA actuator space, producing physically plausible and temporally consistent latent hand trajectories.**
 
 ## 当前核心问题
 
@@ -100,12 +100,10 @@
   - 从关键点中提取的几何特征
 - `corrected`
   - 基于 ORCA actuator 空间的低维结构校正特征
-- `optimized_action_v1`
-  - 初版 MuJoCo 优化得到的 ORCA latent actuator state，只有弱时间正则
-- `optimized_action_v2`
-  - 当前增强版 MuJoCo 优化得到的 ORCA latent actuator state，加入 Huber landmark loss 和 acceleration temporal regularization
-- `optimized_full_v2`
-  - 将 `optimized_action_v2` 再投影回 landmark 空间后得到的完整重建点坐标
+- `optimized_action`
+  - 当前正式版本的 MuJoCo 优化得到的 ORCA latent actuator state，加入 Huber landmark loss 和 acceleration temporal regularization
+- `optimized_full`
+  - 将 `optimized_action` 再投影回 landmark 空间后得到的完整重建点坐标
 
 ## 各类表示与数学内涵
 
@@ -181,94 +179,9 @@ q_{thumb-pip}
 
 也就是说，它没有显式利用上一帧或下一帧，因此不是严格意义上的 temporal anti-jitter filter。
 
-### 2. `optimized_action_v1`
+### 2. `optimized_action`
 
-`optimized_action_v1` 是第一版 MuJoCo 优化得到的 ORCA latent actuator state。
-
-它仍然是 17 维：
-
-\[
-\mathbf{q}_t^* \in \mathbb{R}^{17}
-\]
-
-但它不是直接由规则映射得到，而是通过优化求解：
-
-\[
-\mathbf{q}_t^*
-=
-\arg\min_{\mathbf{q}}
-\mathcal{L}_{v1}(\mathbf{q})
-\]
-
-它与 `corrected` 的关系是：
-
-\[
-\tilde{\mathbf{q}}_t = g(\mathbf{y}_t)
-\]
-
-作为优化的初始化和先验：
-
-\[
-\mathcal{L}_{prior}
-=
-\|\mathbf{q}_t - \tilde{\mathbf{q}}_t\|_2^2
-\]
-
-第一版目标函数可以概括为：
-
-\[
-\mathcal{L}_{v1}(\mathbf{q}_t)
-=
-\lambda_l \mathcal{L}_{landmark}
-+ \lambda_n \mathcal{L}_{normal}
-+ \lambda_p \mathcal{L}_{prior}
-+ \lambda_s \mathcal{L}_{temporal}
-+ \lambda_d \mathcal{L}_{default}
-+ \lambda_b \mathcal{L}_{boundary}
-\]
-
-其中 landmark loss 为：
-
-\[
-\mathcal{L}_{landmark}
-=
-\sum_i
-\|h_i(\mathbf{q}_t) - \mathbf{y}_{t,i}\|_2^2
-\]
-
-palm normal loss 为：
-
-\[
-\mathcal{L}_{normal}
-=
-\|\mathbf{n}_{orca}(\mathbf{q}_t)
--
-\mathbf{n}_{mp}(\mathbf{y}_t)\|_2^2
-\]
-
-temporal loss 为：
-
-\[
-\mathcal{L}_{temporal}
-=
-\|\mathbf{q}_t - \mathbf{q}_{t-1}^*\|_2^2
-\]
-
-所以 `optimized_action_v1` 的数学内涵是：
-
-**带结构先验和弱时序正则的单帧逆运动学拟合。**
-
-它比 `corrected` 更物理，因为它通过 MuJoCo forward kinematics 检查候选 actuator state 是否能解释观测关键点。但它的时序项只约束当前状态接近上一帧：
-
-\[
-\|\mathbf{q}_t - \mathbf{q}_{t-1}^*\|_2^2
-\]
-
-因此对一闪而过的 MediaPipe outlier 抵抗力有限。
-
-### 3. `optimized_action_v2`
-
-`optimized_action_v2` 是当前增强版表示，也是目前最有价值的表示。
+`optimized_action` 是当前正式版本的 MuJoCo 优化表示，也是目前最有价值的表示。
 
 它仍然输出 17 维 actuator latent state：
 
@@ -276,7 +189,7 @@ temporal loss 为：
 \mathbf{q}_t^* \in \mathbb{R}^{17}
 \]
 
-但相比 v1，它新增了两个关键机制：
+它的两个关键机制是：
 
 1. Huber landmark loss
 2. acceleration temporal regularization
@@ -328,7 +241,7 @@ Huber loss 的作用是降低异常 MediaPipe 点的影响。对残差 \(r\)，H
 
 这是离散二阶差分，对应状态轨迹的加速度或突然转折。它正好用于惩罚 MediaPipe 一闪而过造成的突变。
 
-因此 `optimized_action_v2` 的数学内涵是：
+因此 `optimized_action` 的数学内涵是：
 
 **在 ORCA actuator latent space 中进行鲁棒时序状态估计。**
 
@@ -348,7 +261,7 @@ Huber loss 的作用是降低异常 MediaPipe 点的影响。对残差 \(r\)，H
 \tilde{\mathbf{q}}_t = g(\mathbf{y}_t)
 \]
 
-`optimized_action_v2` 是：
+`optimized_action` 是：
 
 \[
 \mathbf{q}_t^*
@@ -359,9 +272,9 @@ Huber loss 的作用是降低异常 MediaPipe 点的影响。对残差 \(r\)，H
 
 因此它更接近真正的 tracking / filtering 方法。
 
-### 4. `optimized_full_v2`
+### 3. `optimized_full`
 
-`optimized_full_v2` 不是新的优化变量，而是把 `optimized_action_v2` 得到的 latent state 重新投影回 landmark 空间。
+`optimized_full` 不是新的优化变量，而是把 `optimized_action` 得到的 latent state 重新投影回 landmark 空间。
 
 先得到：
 
@@ -379,10 +292,10 @@ h(\mathbf{q}_t^*)
 
 其中：
 
-- `optimized_action_v2` 是 17 维 latent actuator state
-- `optimized_full_v2` 是 63 维 reconstructed landmark representation
+- `optimized_action` 是 17 维 latent actuator state
+- `optimized_full` 是 63 维 reconstructed landmark representation
 
-所以 `optimized_full_v2` 是一种：
+所以 `optimized_full` 是一种：
 
 **structure-consistent reconstructed landmark representation**
 
@@ -404,9 +317,8 @@ h(\mathbf{q}_t^*)
 | 表示 | 维度 | 来源 | 是否优化 | 是否时序 | 核心作用 |
 |---|---:|---|---|---|---|
 | `corrected` | 17 | 手工几何映射到 ORCA actuator | 否 | 否 | 结构化低维分类特征 |
-| `optimized_action_v1` | 17 | MuJoCo 优化 | 是 | 弱时序 | 结构一致 latent state |
-| `optimized_action_v2` | 17 | 鲁棒 MuJoCo 时序优化 | 是 | 较强时序 | 稳定且判别性强的 latent state |
-| `optimized_full_v2` | 63 | v2 经 MuJoCo forward 重建 | 间接 | 继承 v2 | 结构一致重建 landmarks |
+| `optimized_action` | 17 | 鲁棒 MuJoCo 时序优化 | 是 | 较强时序 | 稳定且判别性强的 latent state |
+| `optimized_full` | 63 | 经 MuJoCo forward 重建 | 间接 | 继承优化轨迹 | 结构一致重建 landmarks |
 
 最核心的数学区别可以简写为：
 
@@ -417,22 +329,7 @@ h(\mathbf{q}_t^*)
 \]
 
 \[
-\textbf{optimized\_action\_v1:}
-\quad
-\mathbf{q}_t^*
-=
-\arg\min_{\mathbf{q}}
-\left[
-\|h(\mathbf{q})-\mathbf{y}_t\|^2
-+
-\lambda_s\|\mathbf{q}-\mathbf{q}_{t-1}^*\|^2
-+
-\lambda_p\|\mathbf{q}-\tilde{\mathbf{q}}_t\|^2
-\right]
-\]
-
-\[
-\textbf{optimized\_action\_v2:}
+\textbf{optimized\_action:}
 \quad
 \mathbf{q}_t^*
 =
@@ -449,7 +346,7 @@ h(\mathbf{q}_t^*)
 \]
 
 \[
-\textbf{optimized\_full\_v2:}
+\textbf{optimized\_full:}
 \quad
 \mathbf{y}_t^*
 =
@@ -458,7 +355,7 @@ h(\mathbf{q}_t^*)
 
 因此，论文里最推荐的解释是：
 
-**`corrected` 是 heuristic embodiment-aware projection；`optimized_action_v1` 是 weak temporal MuJoCo fitting；`optimized_action_v2` 是 robust temporally regularized MuJoCo latent-state estimation；`optimized_full_v2` 是 optimized latent state 的 forward-kinematic landmark reconstruction。**
+**`corrected` 是 heuristic embodiment-aware projection；`optimized_action` 是 robust temporally regularized MuJoCo latent-state estimation；`optimized_full` 是 optimized latent state 的 forward-kinematic landmark reconstruction。**
 
 ## 方法理解
 
@@ -560,7 +457,7 @@ MuJoCo 前向映射为：
 \mathbf{y}_t^* = h(\mathbf{q}_t^*)
 \]
 
-但当前结果显示，最适合分类的是 \(\mathbf{q}_t^*\) 这个 `optimized_action_v2` latent state，而不是重建后的 \(\mathbf{y}_t^*\)。
+但当前结果显示，最适合分类的是 \(\mathbf{q}_t^*\) 这个 `optimized_action` latent state，而不是重建后的 \(\mathbf{y}_t^*\)。
 
 ## 当前实验设置
 
@@ -599,29 +496,29 @@ MuJoCo 前向映射为：
 - `corrected`
   - `velocity_mean = 0.621456`
   - `acceleration_mean = 0.950898`
-- `optimized_action_v2`
+- `optimized_action`
   - `velocity_mean = 0.334345`
   - `acceleration_mean = 0.357958`
-- `optimized_full_v2`
+- `optimized_full`
   - `velocity_mean = 0.451672`
   - `acceleration_mean = 0.519420`
 
 当前最重要的稳定性发现是：
 
-**`optimized_action_v2` 同时具有最低的 velocity 和 acceleration 指标，说明加入 Huber loss 与 acceleration temporal regularization 后，MuJoCo-constrained latent actuator state 明显降低了时间抖动。**
+**`optimized_action` 同时具有最低的 velocity 和 acceleration 指标，说明加入 Huber loss 与 acceleration temporal regularization 后，MuJoCo-constrained latent actuator state 明显降低了时间抖动。**
 
 ### 2. Few-Shot Sequence Classification
 
 当前 v2 数据集上的结果：
 
-- `optimized_action_v2`: `0.8500 ± 0.1159`
+- `optimized_action`: `0.8500 ± 0.1159`
 - `corrected`: `0.8063 ± 0.1081`
-- `optimized_full_v2`: `0.7125 ± 0.1858`
+- `optimized_full`: `0.7125 ± 0.1858`
 
 当前排序为：
 
 \[
-optimized\_action\_v2 > corrected > optimized\_full\_v2
+optimized\_action > corrected > optimized\_full
 \]
 
 结合之前 raw baseline：
@@ -631,7 +528,7 @@ optimized\_action\_v2 > corrected > optimized\_full\_v2
 因此当前总体趋势为：
 
 \[
-optimized\_action\_v2 > corrected > optimized\_full\_v2 > raw
+optimized\_action > corrected > optimized\_full > raw
 \]
 
 ### 3. Multi-Classifier Comparison
@@ -642,36 +539,36 @@ optimized\_action\_v2 > corrected > optimized\_full\_v2 > raw
 
 - `raw`: `accuracy = 0.6313`, `macro_f1 = 0.6145`, `kappa = 0.4401`
 - `corrected`: `accuracy = 0.8063`, `macro_f1 = 0.7808`, `kappa = 0.7025`
-- `optimized_action_v2`: `accuracy = 0.8500`, `macro_f1 = 0.8290`, `kappa = 0.7674`
-- `optimized_full_v2`: `accuracy = 0.7125`, `macro_f1 = 0.6723`, `kappa = 0.5675`
+- `optimized_action`: `accuracy = 0.8500`, `macro_f1 = 0.8290`, `kappa = 0.7674`
+- `optimized_full`: `accuracy = 0.7125`, `macro_f1 = 0.6723`, `kappa = 0.5675`
 
 #### KNN
 
 - `raw`: `accuracy = 0.5875`, `macro_f1 = 0.5392`, `kappa = 0.3595`
 - `corrected`: `accuracy = 0.7875`, `macro_f1 = 0.7671`, `kappa = 0.6822`
-- `optimized_action_v2`: `accuracy = 0.8063`, `macro_f1 = 0.7802`, `kappa = 0.7114`
-- `optimized_full_v2`: `accuracy = 0.6375`, `macro_f1 = 0.6120`, `kappa = 0.4528`
+- `optimized_action`: `accuracy = 0.8063`, `macro_f1 = 0.7802`, `kappa = 0.7114`
+- `optimized_full`: `accuracy = 0.6375`, `macro_f1 = 0.6120`, `kappa = 0.4528`
 
 #### RandomForest
 
 - `raw`: `accuracy = 0.5938`, `macro_f1 = 0.5418`, `kappa = 0.3688`
 - `corrected`: `accuracy = 0.8688`, `macro_f1 = 0.8679`, `kappa = 0.8030`
-- `optimized_action_v2`: `accuracy = 0.8938`, `macro_f1 = 0.8834`, `kappa = 0.8395`
-- `optimized_full_v2`: `accuracy = 0.7625`, `macro_f1 = 0.7480`, `kappa = 0.6371`
+- `optimized_action`: `accuracy = 0.8938`, `macro_f1 = 0.8834`, `kappa = 0.8395`
+- `optimized_full`: `accuracy = 0.7625`, `macro_f1 = 0.7480`, `kappa = 0.6371`
 
 #### MLP
 
 - `raw`: `accuracy = 0.6250`, `macro_f1 = 0.5934`, `kappa = 0.4188`
 - `corrected`: `accuracy = 0.7625`, `macro_f1 = 0.7517`, `kappa = 0.6410`
-- `optimized_action_v2`: `accuracy = 0.8125`, `macro_f1 = 0.8013`, `kappa = 0.7148`
-- `optimized_full_v2`: `accuracy = 0.6875`, `macro_f1 = 0.6653`, `kappa = 0.5215`
+- `optimized_action`: `accuracy = 0.8125`, `macro_f1 = 0.8013`, `kappa = 0.7148`
+- `optimized_full`: `accuracy = 0.6875`, `macro_f1 = 0.6653`, `kappa = 0.5215`
 
 当前最重要的新发现是：
 
-- `optimized_action_v2` 在四个分类器中都保持强竞争力
-- `RandomForest + optimized_action_v2` 是目前最强组合
+- `optimized_action` 在四个分类器中都保持强竞争力
+- `RandomForest + optimized_action` 是目前最强组合
 - `corrected` 仍然稳定优于 `raw`
-- `optimized_full_v2` 通常不如 `optimized_action_v2`，支持“低维结构化 latent representation 优于高维重建坐标”的论点
+- `optimized_full` 通常不如 `optimized_action`，支持“低维结构化 latent representation 优于高维重建坐标”的论点
 
 ## 当前最重要的发现
 
@@ -692,13 +589,11 @@ optimized\_action\_v2 > corrected > optimized\_full\_v2 > raw
    - 信息多，但噪声也大，few-shot 下容易被抖动和漂移拖累
 2. `corrected`
    - 通过 ORCA 结构约束将高维 noisy landmarks 变成低维、语义明确、关节一致的表示，因此分类效果明显优于 raw
-3. `optimized_action_v1`
-   - 初版只有弱时间正则，因此虽然结构一致，但不足以稳定一闪而过的异常观测
-4. `optimized_action_v2`
+3. `optimized_action`
    - Huber loss 降低异常 landmark 的影响
    - acceleration loss 抑制二阶时间跳变
    - 因此同时获得更低 jitter 和更高分类准确率
-5. `optimized_full_v2`
+4. `optimized_full`
    - 将 latent actuator state 再投影回高维点坐标，维度升高，few-shot 下仍然不如低维 actuator representation
 
 ## 当前适合写进论文的安全结论
@@ -734,7 +629,7 @@ optimized\_action\_v2 > corrected > optimized\_full\_v2 > raw
 2. ORCA actuator space 提供低维结构化 hand state
 3. 初始 corrected 表示证明了结构先验对 few-shot classification 有帮助
 4. 进一步加入 MuJoCo forward fitting、Huber observation loss 和 acceleration temporal regularization
-5. 得到的 `optimized_action_v2` 同时降低 jitter，并提升 sequence-level few-shot classification
+5. 得到的 `optimized_action` 同时降低 jitter，并提升 sequence-level few-shot classification
 6. 结果说明：最有用的不是高维重建 landmarks，而是结构约束下的低维 latent actuator representation
 
 ## 为什么这个结果有意思
@@ -783,19 +678,19 @@ optimized\_action\_v2 > corrected > optimized\_full\_v2 > raw
 
 目的：
 
-确认 `corrected` / `optimized_action_v2` 的优势不是单纯因为从 63 维降到了 17 维。
+确认 `corrected` / `optimized_action` 的优势不是单纯因为从 63 维降到了 17 维。
 
 需要比较：
 
 - `raw`
 - `PCA(raw)-17`
 - `corrected`
-- `optimized_action_v2`
+- `optimized_action`
 
 如果：
 
 \[
-optimized\_action\_v2 > corrected > PCA17 > raw
+optimized\_action > corrected > PCA17 > raw
 \]
 
 那么论文论点会更强。
@@ -818,10 +713,10 @@ optimized\_action\_v2 > corrected > PCA17 > raw
 需要比较：
 
 - `corrected`
-- `optimized_action_v1`
-- `optimized_action_v2_no_huber`
-- `optimized_action_v2_no_acceleration`
-- `optimized_action_v2_full`
+- `optimized_action`
+- `optimized_action_no_huber`
+- `optimized_action_no_acceleration`
+- `optimized_full`
 
 目的：
 

@@ -1,0 +1,270 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+
+\usepackage{amsmath,amssymb}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{multirow}
+\usepackage{url}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.75\baselineskip}
+
+\title{Robust Hand Landmark Correction via MuJoCo-Constrained Temporal Optimization}
+\author{Jiating Li}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Vision-based hand landmark estimators such as MediaPipe often suffer from frame-level jitter, drift, and transient outliers under challenging viewpoints and self-occlusion. We propose a MuJoCo-constrained temporal optimization framework that corrects noisy hand landmarks in an ORCA actuator space, producing physically plausible and temporally consistent latent hand trajectories. Unlike conventional temporal smoothing, the correction process is performed in a structured actuator space and constrained by MuJoCo forward kinematics, which allows the method to respect embodiment priors rather than merely averaging coordinates over time. The resulting latent representation is more stable than raw landmarks and is better suited to downstream few-shot gesture classification. Our formulation combines a rule-based actuator projection, robust landmark fitting, palm-normal alignment, prior regularization, and temporal smoothness terms, including acceleration regularization to suppress transient failures from the vision frontend. Experiments on three gesture classes show that the optimized actuator representation achieves the lowest temporal jitter and the best overall downstream accuracy, with RandomForest and the optimized action representation reaching 0.8938 accuracy in the current few-shot setting.
+\end{abstract}
+
+\section{Introduction}
+Vision-based hand tracking is attractive because it is inexpensive and easy to deploy, but its outputs can become unstable under self-occlusion, oblique viewpoints, or fast motion. In our setting, the key challenge is not whether a robotic hand can imitate a human hand, but how to recover a stable and informative representation when MediaPipe landmarks exhibit jitter, drift, and abrupt outliers.
+
+This paper studies the following question: when observed hand landmarks are noisy, can the structural prior of the ORCA hand and the forward model in MuJoCo be used to produce a cleaner latent representation that is more suitable for few-shot gesture recognition?
+
+Our focus is therefore fourfold:
+\begin{itemize}[leftmargin=*]
+    \item whether raw MediaPipe landmarks are sufficiently stable for sequence recognition;
+    \item whether the ORCA actuator space provides a better low-dimensional and structured representation;
+    \item whether MuJoCo-constrained optimization further mitigates transient landmark drift; and
+    \item whether a smoother latent actuator trajectory improves downstream few-shot sequence classification.
+\end{itemize}
+
+The paper is intentionally organized around frame correction as the main method, while sequence aggregation and classification are treated as downstream evaluation rather than as the correction mechanism itself.
+
+\section{Related Work}
+\subsection{Vision-based Hand Keypoint Estimation}
+Modern vision-based hand trackers provide convenient frame-wise 2D/3D keypoints, but performance can degrade under occlusion, severe perspective change, and fast motion. In such cases, frame-level predictions may remain plausible in image space while becoming unstable over time, which is problematic for downstream recognition and control.
+
+\subsection{Physical and Kinematic Constraints for Pose Correction}
+A common way to improve noisy pose observations is to introduce priors from kinematic structure, embodiment, or inverse kinematics. Rather than directly smoothing coordinates, these approaches regularize the solution inside a lower-dimensional configuration space. Our method follows this direction by refining observations inside the actuator space of an embodied ORCA hand and validating candidate configurations through MuJoCo forward kinematics.
+
+\subsection{Few-shot Gesture Recognition}
+Few-shot gesture recognition is particularly sensitive to representation quality. Under limited supervision, low-dimensional and semantically structured features are often preferable to high-dimensional raw coordinates. This motivates our use of actuator-space representations and lightweight sequence-level classifiers for downstream evaluation.
+
+\section{Method}
+Let $\mathbf{y}_t \in \mathbb{R}^{21 \times 3}$ denote the MediaPipe hand landmarks at frame $t$, and let the vectorized form also be written as $\mathbf{y}_t \in \mathbb{R}^{63}$. Our goal is to transform these noisy observations into a stable latent actuator trajectory $\mathbf{q}_t^* \in \mathbb{R}^{17}$ that is physically plausible under the ORCA hand structure and MuJoCo forward kinematics.
+
+\subsection{Raw Hand Landmark Extraction}
+We begin from the normalized $21 \times 3$ landmarks predicted by MediaPipe. These landmarks serve as the raw observation space and directly capture wrist pose, finger articulation, and hand shape. However, because the representation is high-dimensional and unconstrained, it is sensitive to frame-level estimation noise and can fluctuate even when the underlying gesture remains unchanged.
+
+\subsection{Frame-level Physical Correction}
+The first structured representation is a rule-based projection from landmarks to the ORCA actuator space:
+\[
+\tilde{\mathbf{q}}_t = g(\mathbf{y}_t), \qquad \tilde{\mathbf{q}}_t \in \mathbb{R}^{17}.
+\]
+Here, $g(\cdot)$ is a hand-designed geometric mapping that extracts semantically meaningful quantities such as wrist orientation, finger flexion, finger abduction, thumb opening, and palm normal direction. This representation, referred to as \texttt{corrected}, is not learned and is not obtained by optimization. Instead, it is an embodiment-constrained reparameterization that replaces high-dimensional landmark coordinates with a low-dimensional semantic actuator description.
+
+The advantage of \texttt{corrected} is interpretability and structural compactness, which can already benefit few-shot classification. Its limitation is that it is computed independently for each frame and therefore does not explicitly suppress temporal jitter.
+
+\subsection{Optimized Action Representation}
+To obtain a more stable latent state, we optimize actuator variables against the observed landmarks while enforcing physical consistency through MuJoCo forward kinematics. Let $h(\mathbf{q})$ denote the MuJoCo forward model that maps actuator states to landmark positions, and let $\mathcal{Q}$ denote the feasible actuator set.
+
+The optimized action representation solves
+\[
+\mathbf{q}_t^*
+=
+\arg\min_{\mathbf{q}_t \in \mathcal{Q}}
+\lambda_l \mathcal{L}_{\text{huber}}
++
+\lambda_n \mathcal{L}_{\text{normal}}
++
+\lambda_p \mathcal{L}_{\text{prior}}
++
+\lambda_s \mathcal{L}_{\text{temporal}}
++
+\lambda_a \mathcal{L}_{\text{acceleration}}
++
+\lambda_d \mathcal{L}_{\text{default}}
++
+\lambda_b \mathcal{L}_{\text{boundary}}.
+\]
+The main fitting and regularization terms are
+\[
+\mathcal{L}_{\text{huber}}
+=
+\sum_i \rho_\delta \!\left(\left\| h_i(\mathbf{q}_t) - \mathbf{y}_{t,i} \right\|_2\right),
+\qquad
+\mathcal{L}_{\text{normal}}
+=
+\left\| \mathbf{n}_{\text{orca}}(\mathbf{q}_t) - \mathbf{n}_{\text{mp}}(\mathbf{y}_t) \right\|_2^2,
+\]
+\[
+\mathcal{L}_{\text{prior}}
+=
+\left\| \mathbf{q}_t - \tilde{\mathbf{q}}_t \right\|_2^2,
+\qquad
+\mathcal{L}_{\text{temporal}}
+=
+\left\| \mathbf{q}_t - \mathbf{q}_{t-1}^* \right\|_2^2.
+\]
+The Huber penalty for a residual $r$ is
+\[
+\rho_{\delta}(r)
+=
+\begin{cases}
+\frac{1}{2} r^2, & |r| \le \delta, \\
+\delta \left(|r| - \frac{1}{2}\delta\right), & |r| > \delta,
+\end{cases}
+\]
+which behaves like an $L_2$ loss for small residuals and like an $L_1$-style penalty for large residuals. This reduces the influence of transient MediaPipe failures. We also add an acceleration regularizer,
+\[
+\mathcal{L}_{\text{acceleration}}
+=
+\left\| \mathbf{q}_t - 2\mathbf{q}_{t-1}^* + \mathbf{q}_{t-2}^* \right\|_2^2,
+\]
+which penalizes abrupt second-order changes in the actuator trajectory. The resulting representation is best interpreted as a robust temporally regularized latent-state estimator rather than a simple smoother.
+
+For visualization and geometric evaluation, we further reconstruct a landmark representation by projecting the optimized actuator state back through MuJoCo:
+\[
+\mathbf{y}_t^* = h(\mathbf{q}_t^*).
+\]
+We refer to this reconstructed landmark sequence as \texttt{optimized\_full}. Although it is useful for assessing geometric consistency, it is not necessarily the best representation for classification because it returns to a higher-dimensional coordinate space.
+
+\subsection{Sequence-level Statistical Aggregation for Downstream Evaluation}
+The main method operates at the frame level. For downstream few-shot classification, we aggregate frame-wise features across a sequence using summary statistics such as mean, standard deviation, maximum, and temporal difference descriptors. If a frame-level feature is $\mathbf{x}_t \in \mathbb{R}^{d}$, then for a sequence of length $T$ we compute
+\[
+\boldsymbol{\mu} = \frac{1}{T}\sum_{t=1}^{T}\mathbf{x}_t,\qquad
+\boldsymbol{\sigma} = \mathrm{std}(\mathbf{x}_1,\dots,\mathbf{x}_T),
+\]
+\[
+\mathbf{m} = \max_{t=1,\dots,T}\mathbf{x}_t,\qquad
+\boldsymbol{\Delta} = \mathbf{x}_T - \mathbf{x}_1,
+\]
+and concatenate them into
+\[
+\mathbf{z}^{(s)} = [\boldsymbol{\mu}, \boldsymbol{\sigma}, \mathbf{m}, \boldsymbol{\Delta}] \in \mathbb{R}^{4d}.
+\]
+This aggregation is an evaluation protocol rather than the correction method itself. Its purpose is to compare whether cleaner frame-level representations lead to better sequence-level classification under limited supervision.
+
+\begin{table}[t]
+\centering
+\caption{Summary of the representations used in this study.}
+\footnotesize
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.20\linewidth} >{\raggedright\arraybackslash}p{0.06\linewidth} >{\raggedright\arraybackslash}p{0.15\linewidth} >{\raggedright\arraybackslash}p{0.10\linewidth} >{\raggedright\arraybackslash}p{0.10\linewidth} >{\raggedright\arraybackslash}p{0.22\linewidth}@{}}
+\toprule
+Representation & Dim. & Source & Optimized & Temporal & Main role \\
+\midrule
+\texttt{corrected} & 17 & geometric mapping & no & no & structured low-dimensional feature \\
+\texttt{optimized\_action} & 17 & robust MuJoCo optimization & yes & strong & stable and discriminative latent state \\
+\texttt{optimized\_full} & 63 & forward reconstruction & indirect & inherited & structure-consistent landmark reconstruction \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Experiments and Results}
+\subsection{Dataset and Gesture Classes}
+We evaluate the method on the current sequence dataset \texttt{gesture\_sequence\_dataset\_optimized\_v2.csv}, which contains 39 gesture sequences and 5409 frames in total. The present study uses three gesture classes, labeled 6, 7, and 8, and evaluates a few-shot setting with three training sequences per class. Each experiment is repeated 20 times with different train/test splits.
+
+\subsection{Frame-level Stability Evaluation}
+We first evaluate temporal smoothness using velocity- and acceleration-based sequence statistics, where lower values indicate smoother behavior. The current results are summarized in Table~\ref{tab:jitter}. The optimized action representation achieves the lowest velocity and acceleration, indicating that the combination of robust fitting and acceleration regularization suppresses transient drift more effectively than both raw landmarks and the heuristic corrected representation.
+
+\begin{table}[t]
+\centering
+\caption{Temporal jitter statistics on the current dataset. Lower is better.}
+\label{tab:jitter}
+\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Representation & Velocity Mean & Velocity RMS & Acceleration Mean & Acceleration RMS \\
+\midrule
+Raw & 0.4439 & 0.5566 & 0.5952 & 0.7256 \\
+Corrected & 0.6215 & 0.8251 & 0.9509 & 1.2118 \\
+Optimized Action & \textbf{0.3343} & \textbf{0.4190} & \textbf{0.3580} & \textbf{0.4517} \\
+Optimized Full & 0.4517 & 0.7190 & 0.5194 & 0.8169 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Sequence-level Few-shot Classification}
+We next evaluate whether the cleaner frame-level representations lead to better sequence-level few-shot recognition. Table~\ref{tab:main_classifiers} reports the current results across four lightweight classifiers.
+
+\begin{table}[t]
+\centering
+\caption{Few-shot sequence classification results (mean over 20 repeats).}
+\label{tab:main_classifiers}
+\footnotesize
+\begin{tabular}{@{}llccc@{}}
+\toprule
+Classifier & Representation & Accuracy & Macro-F1 & Kappa \\
+\midrule
+\multirow{4}{*}{SVM}
+& Raw & 0.6313 & 0.6145 & 0.4401 \\
+& Corrected & 0.8063 & 0.7808 & 0.7025 \\
+& Optimized Action & \textbf{0.8500} & \textbf{0.8290} & \textbf{0.7674} \\
+& Optimized Full & 0.7125 & 0.6723 & 0.5675 \\
+\midrule
+\multirow{4}{*}{KNN}
+& Raw & 0.5875 & 0.5392 & 0.3595 \\
+& Corrected & 0.7875 & 0.7671 & 0.6822 \\
+& Optimized Action & 0.8063 & 0.7802 & 0.7114 \\
+& Optimized Full & 0.6375 & 0.6120 & 0.4528 \\
+\midrule
+\multirow{4}{*}{RandomForest}
+& Raw & 0.5938 & 0.5418 & 0.3688 \\
+& Corrected & 0.8688 & 0.8679 & 0.8030 \\
+& Optimized Action & \textbf{0.8938} & \textbf{0.8834} & \textbf{0.8395} \\
+& Optimized Full & 0.7625 & 0.7480 & 0.6371 \\
+\midrule
+\multirow{4}{*}{MLP}
+& Raw & 0.6250 & 0.5934 & 0.4188 \\
+& Corrected & 0.7625 & 0.7517 & 0.6410 \\
+& Optimized Action & 0.8125 & 0.8013 & 0.7148 \\
+& Optimized Full & 0.6875 & 0.6653 & 0.5215 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Across classifiers, \texttt{optimized\_action} is consistently among the strongest representations. The best overall combination on the current dataset is RandomForest with optimized action, which reaches 0.8938 accuracy, 0.8834 macro-F1, and 0.8395 Cohen's kappa.
+
+\subsection{Classifier Comparison}
+The classifier comparison suggests two complementary observations. First, representation choice matters more than classifier choice when comparing raw landmarks against corrected or optimized representations: all four classifiers improve substantially once the features become structured and denoised. Second, RandomForest currently provides the strongest overall downstream accuracy, while SVM offers a particularly clean comparison across representations.
+
+\subsection{Ablation-oriented PCA Baseline Analysis}
+Because the optimized action space is 17-dimensional, one natural question is whether its advantage comes merely from dimensionality reduction. To test this, we compare against PCA-reduced raw landmarks. The strongest matched baseline in the current focused comparison is RandomForest with \texttt{raw\_pca12}, which reaches 0.8563 accuracy and 0.8456 macro-F1. However, this remains below both \texttt{corrected} and \texttt{optimized\_action}.
+
+\begin{table}[t]
+\centering
+\caption{Focused comparison between raw, best PCA baseline, and structured ORCA/MuJoCo representations under RandomForest.}
+\label{tab:rf_pca}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Representation & Accuracy & Macro-F1 & Kappa \\
+\midrule
+Raw & 0.5938 & 0.5418 & 0.3688 \\
+Best PCA baseline (\texttt{raw\_pca12}) & 0.8563 & 0.8456 & 0.7792 \\
+Corrected & 0.8688 & 0.8679 & 0.8030 \\
+Optimized Action & \textbf{0.8938} & \textbf{0.8834} & \textbf{0.8395} \\
+Optimized Full & 0.7625 & 0.7480 & 0.6371 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This comparison shows that dimensionality reduction alone is helpful, but not sufficient to explain the full gain. In particular, the ORCA-aware corrected representation exceeds the best PCA baseline, and MuJoCo-constrained optimized action further improves on corrected. Therefore, the performance improvement should be attributed not only to reduced dimensionality, but also to embodiment-aware structure and constrained temporal refinement.
+
+\section{Discussion}
+\subsection{Why Frame Correction Improves Sequence Classification}
+Sequence classifiers depend on stable frame-level evidence. When raw landmarks fluctuate because of viewpoint changes or self-occlusion, the resulting sequence descriptors mix gesture information with estimation noise. By correcting landmarks in actuator space, the proposed method suppresses nuisance variation before sequence aggregation.
+
+\subsection{Reconstruction versus Discriminative Representation}
+A lower reconstruction error does not necessarily imply better classification. The reconstructed landmark space \texttt{optimized\_full} is useful for visualization and physical plausibility checks, but the compact actuator representation \texttt{optimized\_action} is more attractive for few-shot classification because it is lower-dimensional, structured, and semantically aligned with hand articulation.
+
+\subsection{Limitation of Statistical Aggregation}
+Simple statistical aggregation is convenient and easy to interpret, but it discards temporal ordering beyond low-order summaries. Stronger sequence models such as recurrent networks or temporal transformers may extract additional discriminative information once a stable frame-level representation is available.
+
+\subsection{Future Work with Stronger Temporal Models}
+The current framework isolates the effect of frame-level correction. A natural next step is to combine the robust actuator trajectory with stronger temporal encoders, such as GRU or LSTM baselines, to evaluate whether richer sequence models can further improve recognition accuracy. Another promising direction is cross-session validation with more gesture classes and larger subject diversity.
+
+\section{Conclusion}
+We present a MuJoCo-constrained temporal optimization framework for correcting noisy hand landmarks in an ORCA actuator space. The method moves beyond conventional temporal smoothing by enforcing embodiment priors and forward-kinematic consistency while incorporating robust loss design and temporal regularization. The resulting actuator representation is physically plausible, temporally stable, and well suited to downstream few-shot gesture classification. Current experiments show that the optimized action representation achieves the best overall performance among the tested structured representations, while also providing direct evidence that the gain is not merely due to dimensionality reduction.
+
+\end{document}
