@@ -105,6 +105,32 @@
 - `optimized_full`
   - 将 `optimized_action` 再投影回 landmark 空间后得到的完整重建点坐标
 
+## 为什么当前先采用统计型时序方法
+
+当前使用的 `mean / std / max / delta` 不是主方法，而是：
+
+**第一阶段最轻量、最可控的 downstream sequence evaluation protocol。**
+
+这样做有三个原因：
+
+1. 可以把论文主贡献集中在 `frame-level correction` 上，而不是被更复杂的时序分类器掩盖
+2. 在当前 few-shot 数据规模下，固定长度统计表示具有更好的 bias--variance tradeoff，更不容易因为高容量时序模型而过拟合
+3. 如果在这样一个简单下游协议下，`optimized_action` 仍然明显优于 `raw`、`corrected` 和 PCA baseline，那么就更能说明提升来自表示质量本身
+
+因此，当前统计型时序处理的定位应该是：
+
+- 不是“最强时序模型”
+- 而是“用于隔离和验证 frame-level representation quality 的轻量评估协议”
+
+这也是为什么第一篇论文可以先使用这一套，而后续再补：
+
+- `GRU`
+- `LSTM`
+- temporal CNN
+- transformer baseline
+
+来进一步验证 refined representation 对更强 temporal models 是否同样有帮助。
+
 ## 各类表示与数学内涵
 
 ### 1. `corrected`

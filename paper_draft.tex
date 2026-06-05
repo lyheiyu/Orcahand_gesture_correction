@@ -25,7 +25,9 @@ Vision-based hand landmark estimators such as MediaPipe often suffer from frame-
 \end{abstract}
 
 \section{Introduction}
-Vision-based hand tracking is attractive because it is inexpensive and easy to deploy, but its outputs can become unstable under self-occlusion, oblique viewpoints, or fast motion. In our setting, the key challenge is not whether a robotic hand can imitate a human hand, but how to recover a stable and informative representation when MediaPipe landmarks exhibit jitter, drift, and abrupt outliers.
+MediaPipe provides an efficient real-time pipeline for hand landmark detection and lightweight tracking. However, its landmark trajectories may still exhibit jitter, drift, and anatomically implausible variations under self-occlusion, oblique viewpoints, and rapid finger motion. This issue is particularly important for dynamic gesture classification, where downstream temporal models operate on sequences of estimated landmarks and may inherit errors from noisy observations.
+
+Existing MediaPipe-based gesture-recognition pipelines commonly focus on applying temporal encoders after landmark extraction, whereas this work focuses on improving the quality of the landmark sequence itself before downstream recognition. In our setting, the key challenge is not whether a robotic hand can imitate a human hand, but how to recover a stable and informative representation when MediaPipe landmarks become unreliable under challenging visual conditions.
 
 This paper studies the following question: when observed hand landmarks are noisy, can the structural prior of the ORCA hand and the forward model in MuJoCo be used to produce a cleaner latent representation that is more suitable for few-shot gesture recognition?
 
@@ -39,15 +41,24 @@ Our focus is therefore fourfold:
 
 The paper is intentionally organized around frame correction as the main method, while sequence aggregation and classification are treated as downstream evaluation rather than as the correction mechanism itself.
 
+More specifically, this paper is positioned as a MuJoCo-constrained temporal refinement framework for improving the robustness of MediaPipe landmark sequences and their downstream few-shot gesture recognition performance, rather than as a new temporal gesture classifier.
+
+The main contributions of this work are:
+\begin{itemize}[leftmargin=*]
+    \item We introduce a structured landmark-refinement pipeline that maps noisy MediaPipe observations into the actuator space of an articulated ORCA hand model.
+    \item We formulate MuJoCo-constrained temporal optimization with robust landmark fitting, prior regularization, and acceleration-aware temporal consistency to obtain a stable latent actuator representation.
+    \item We show that the refined latent representation improves both temporal stability and downstream few-shot dynamic gesture classification compared with raw landmarks, heuristic correction, and strong PCA baselines.
+\end{itemize}
+
 \section{Related Work}
 \subsection{Vision-based Hand Keypoint Estimation}
-Modern vision-based hand trackers provide convenient frame-wise 2D/3D keypoints, but performance can degrade under occlusion, severe perspective change, and fast motion. In such cases, frame-level predictions may remain plausible in image space while becoming unstable over time, which is problematic for downstream recognition and control.
+Modern vision-based hand trackers provide convenient 2D/3D keypoints together with lightweight frame-to-frame tracking, but performance can still degrade under occlusion, severe perspective change, and fast motion. In such cases, landmark trajectories may remain plausible in image space while becoming temporally unstable or anatomically inconsistent, which is problematic for downstream recognition and control.
 
 \subsection{Physical and Kinematic Constraints for Pose Correction}
-A common way to improve noisy pose observations is to introduce priors from kinematic structure, embodiment, or inverse kinematics. Rather than directly smoothing coordinates, these approaches regularize the solution inside a lower-dimensional configuration space. Our method follows this direction by refining observations inside the actuator space of an embodied ORCA hand and validating candidate configurations through MuJoCo forward kinematics.
+A common way to improve noisy pose observations is to introduce priors from kinematic structure, embodiment, inverse kinematics, or temporal consistency. Rather than directly smoothing coordinates, these approaches regularize the solution inside a lower-dimensional configuration space. Our method follows this direction by refining observations inside the actuator space of an embodied ORCA hand and validating candidate configurations through MuJoCo forward kinematics.
 
 \subsection{Few-shot Gesture Recognition}
-Few-shot gesture recognition is particularly sensitive to representation quality. Under limited supervision, low-dimensional and semantically structured features are often preferable to high-dimensional raw coordinates. This motivates our use of actuator-space representations and lightweight sequence-level classifiers for downstream evaluation.
+Few-shot gesture recognition is particularly sensitive to representation quality. Many practical MediaPipe-based pipelines treat extracted landmarks as ready-to-use temporal features and focus on temporal encoders such as GRU, LSTM, or Transformer models after landmark extraction. In contrast, this work focuses on improving the quality of the landmark sequence itself before downstream recognition. Under limited supervision, low-dimensional and semantically structured features are often preferable to high-dimensional raw coordinates, which motivates our use of actuator-space representations and lightweight sequence-level classifiers for downstream evaluation.
 
 \section{Method}
 Let $\mathbf{y}_t \in \mathbb{R}^{21 \times 3}$ denote the MediaPipe hand landmarks at frame $t$, and let the vectorized form also be written as $\mathbf{y}_t \in \mathbb{R}^{63}$. Our goal is to transform these noisy observations into a stable latent actuator trajectory $\mathbf{q}_t^* \in \mathbb{R}^{17}$ that is physically plausible under the ORCA hand structure and MuJoCo forward kinematics.
@@ -143,6 +154,8 @@ and concatenate them into
 \mathbf{z}^{(s)} = [\boldsymbol{\mu}, \boldsymbol{\sigma}, \mathbf{m}, \boldsymbol{\Delta}] \in \mathbb{R}^{4d}.
 \]
 This aggregation is an evaluation protocol rather than the correction method itself. Its purpose is to compare whether cleaner frame-level representations lead to better sequence-level classification under limited supervision.
+
+We intentionally adopt this lightweight statistical sequence encoding in the first-stage evaluation for two reasons. First, it keeps the downstream model simple enough that observed gains can be attributed primarily to representation quality rather than to a high-capacity temporal classifier. Second, in the current few-shot setting, a compact fixed-length descriptor offers a favorable bias--variance tradeoff and avoids over-interpreting noisy short training sequences. Stronger temporal baselines such as GRU and LSTM models are important future comparisons, but they are not required for establishing the core contribution of this paper, namely frame-level landmark refinement in a structured actuator space.
 
 \begin{table}[t]
 \centering
