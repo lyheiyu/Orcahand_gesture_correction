@@ -129,6 +129,408 @@
 - temporal CNN
 - transformer baseline
 
+## 实验 baseline 体系应该如何划分
+
+当前论文后续最需要补强的，不是再随意增加模型，而是把 baseline 体系分清楚。最稳妥的做法是把 baseline 分成下面几类：
+
+### 1. Raw baseline
+
+- `raw`
+
+这是一切比较的原始起点，用来回答：
+
+**不做任何结构约束和时序修正时，MediaPipe landmarks 本身能达到什么水平。**
+
+### 2. Dimensionality reduction baseline
+
+- `PCA-17`
+- `best PCA`（例如当前 sweep 中最优的 `PCA-12`）
+
+这一类 baseline 回答的是：
+
+**当前方法的提升是不是只是因为从 63 维降到了更低维。**
+
+也就是说，PCA 检验的是：
+
+- 低维化本身的贡献
+- 统计降维能否解释当前提升
+
+因此，PCA 不能丢，而且必须继续保留。
+
+### 3. Temporal smoothing / filtering baseline
+
+- moving average
+- Savitzky-Golay
+- One-Euro
+- Kalman
+
+这一类 baseline 回答的是：
+
+**当前方法的提升是不是只是因为对 noisy landmark trajectory 做了更复杂的平滑。**
+
+也就是说，这一组检验的是：
+
+- 时间平滑本身的贡献
+- 普通 landmark-space denoising 是否已经足够
+
+### 4. Structured projection baseline
+
+- `corrected`
+
+这一类回答的是：
+
+**如果只利用 ORCA 结构先验做启发式 actuator-space projection，不做 MuJoCo 时序优化，会达到什么效果。**
+
+### 5. Constrained refinement method
+
+- `optimized_action`
+- `optimized_full`
+
+这才是当前论文的核心方法输出。
+
+其中：
+
+- `optimized_action` 是主表示
+- `optimized_full` 是 forward reconstruction 后的 landmark-space 输出
+
+## 为什么 PCA 和 smoothing 都必须做
+
+PCA 和 smoothing 不是同一类 baseline，不能互相替代。
+
+### PCA 解决的问题
+
+PCA 主要回答：
+
+**你这个方法是不是只是因为降维。**
+
+### smoothing 解决的问题
+
+smoothing / filtering 主要回答：
+
+**你这个方法是不是只是另一种更复杂的平滑。**
+
+因此，论文最终必须同时回答两个问题：
+
+1. 当前方法不只是降维
+2. 当前方法也不只是平滑
+
+这也是为什么：
+
+- `PCA-17 / best PCA` 必须保留
+- `moving average / SG / One-Euro / Kalman` 也必须补上
+
+## 最推荐的实验组织方式
+
+### A. Landmark space
+
+主要比较：
+
+- `raw`
+- `moving average`
+- `Savitzky-Golay`
+- `One-Euro`
+- `Kalman`
+- `optimized_full`
+
+这里主要看：
+
+- landmark-space temporal stability
+- downstream classification
+
+### B. Actuator / latent space
+
+主要比较：
+
+- `corrected`
+- `PCA-17`
+- `best PCA`
+- `optimized_action`
+
+这里主要看：
+
+- actuator-space temporal stability
+- downstream classification
+
+## 一句话总结
+
+最清楚的说法是：
+
+**PCA 是 dimensionality baseline，smoothing/filtering 是 temporal denoising baseline，而 `corrected` / `optimized_action` / `optimized_full` 是结构约束方法本身。论文必须同时证明：当前方法不只是降维，也不只是平滑。**
+
+## 为什么 smoothing baseline 仍然必须比较
+
+这一部分很重要，需要专门记录清楚：
+
+**和 smoothing baseline 比较，不是为了说明 `optimized_action` 和 Kalman / One-Euro 是同一种方法，而是为了证明当前方法的提升不能被“普通时间平滑”解释掉。**
+
+也就是说，这个比较回答的问题不是：
+
+- 谁是同类 filtering algorithm 里最强的
+
+而是：
+
+- 当前方法的提升，是否只不过来自某种简单 temporal smoothing
+
+答案从当前实验看是：
+
+**不是。**
+
+### 为什么这个比较仍然有意义
+
+虽然：
+
+- `moving average`
+- `Savitzky-Golay`
+- `One-Euro`
+- `Kalman`
+
+都属于 landmark-space smoothing / filtering 方法，
+
+而：
+
+- `corrected`
+- `optimized_action`
+- `optimized_full`
+
+属于 ORCA/MuJoCo 结构约束表示，
+
+它们不是同一种算法范式，但它们都可以作为：
+
+**同一个下游 gesture recognition 任务的候选输入表示。**
+
+因此需要分清两种比较：
+
+### 1. 同空间公平比较
+
+如果问题是：
+
+**“在 landmark space 里，只做时序平滑是否已经足够？”**
+
+那么应该比较：
+
+- `raw`
+- `moving_average_raw`
+- `savgol_raw`
+- `oneeuro_raw`
+- `kalman_raw`
+- `optimized_full`
+
+这里之所以用 `optimized_full`，不是因为它是最终最优表示，而是因为：
+
+**`optimized_full` 是当前方法回到 landmark space 的输出，因此它可以和传统 landmark-space smoothing baseline 做更公平的比较。**
+
+这一组比较回答的是：
+
+**即使把当前方法重新投影回 landmark 坐标空间，它是否仍然优于普通平滑？**
+
+如果答案是是的，那么就能说明：
+
+**当前方法不是普通 smoothing 的复杂改写版。**
+
+### 2. 最终任务表现比较
+
+如果问题是：
+
+**“哪一种表示最适合下游 few-shot dynamic gesture classification？”**
+
+那么可以比较：
+
+- `raw`
+- `PCA-17`
+- `best PCA`
+- `corrected`
+- `optimized_action`
+- `optimized_full`
+
+这时比较的不是“同类算法”，而是：
+
+**不同表示在同一个下游任务上的最终有效性。**
+
+在这一层面，最关键的发现是：
+
+**`optimized_action` 是当前最强的最终表示。**
+
+### 当前 smoothing baseline 的实验结论
+
+在 RandomForest 分类器下，当前结果为：
+
+- `raw`: `0.5938`
+- `moving_average_raw`: `0.6062`
+- `savgol_raw`: `0.6125`
+- `oneeuro_raw`: `0.6375`
+- `kalman_raw`: `0.6250`
+- `optimized_full`: `0.7625`
+
+这个结果说明：
+
+1. 普通 smoothing / filtering 确实能比 raw 略有提升
+2. 但这种提升是有限的
+3. `optimized_full` 明显超过所有 landmark-space smoothing baseline
+4. 因此当前方法的优势不能简单归因于时间平滑
+
+也就是说，目前最合理的论文表述是：
+
+**Conventional landmark-space smoothing provides only modest gains over raw MediaPipe landmarks, whereas the MuJoCo-constrained refined landmark reconstruction achieves substantially stronger downstream recognition performance.**
+
+### 最关键的逻辑结论
+
+这一组 baseline 的意义不是证明：
+
+- `optimized_action` 和 Kalman 是同一种方法
+
+而是证明：
+
+**当前方法的效果不是“做了更复杂的平滑”这么简单。**
+
+因此论文里最安全的表述应该是：
+
+- smoothing baseline comparison 用来排除 “只是普通平滑” 这一解释
+- PCA baseline comparison 用来排除 “只是普通降维” 这一解释
+- `optimized_action` 的最优结果则说明：真正有效的是 ORCA/MuJoCo 结构约束下的 latent actuator refinement
+
+### 这部分在论文里应该怎么组织
+
+最稳妥的组织方式是：
+
+#### Table A: Landmark-space smoothing comparison
+
+放：
+
+- `raw`
+- `moving average`
+- `Savitzky-Golay`
+- `One-Euro`
+- `Kalman`
+- `optimized_full`
+
+这张表的目的：
+
+**证明当前方法即使回到 landmark space，也明显优于传统 smoothing/filtering。**
+
+#### Table B: Representation comparison for downstream recognition
+
+放：
+
+- `raw`
+- `PCA-17`
+- `best PCA`
+- `corrected`
+- `optimized_action`
+- `optimized_full`
+
+这张表的目的：
+
+**证明当前最优表示不是 raw，也不是 generic PCA，而是结构约束下得到的 `optimized_action` actuator latent representation。**
+
+### 当前一句话记录
+
+这部分最值得记住的一句话是：
+
+**Smoothing baseline comparison does not claim algorithmic homogeneity; instead, it serves to show that the benefit of the proposed method cannot be reduced to ordinary temporal smoothing.**
+
+## 建议的 baseline 实验矩阵
+
+下面这张矩阵可以直接作为后续补实验的执行顺序参考。
+
+| 类别 | 方法 | 所在空间 | 主要用途 | 应优先比较的指标 |
+|---|---|---|---|---|
+| Raw baseline | `raw` | landmark space | 原始观测起点 | jitter + classification |
+| Smoothing baseline | moving average | landmark space | 最简单平滑 | jitter + classification |
+| Smoothing baseline | Savitzky-Golay | landmark space | 局部多项式平滑 | jitter + classification |
+| Smoothing baseline | One-Euro | landmark space | 实时 tracking 平滑 | jitter + classification |
+| Smoothing baseline | Kalman | landmark space | 时序状态估计 | jitter + classification |
+| Structured method output | `optimized_full` | landmark space | 结构约束后的重建 landmarks | jitter + classification |
+| Dimensionality baseline | `PCA-17` | latent / feature space | 维度匹配 baseline | classification |
+| Dimensionality baseline | `best PCA` | latent / feature space | 最优统计降维 baseline | classification |
+| Structured projection | `corrected` | actuator space | 启发式 ORCA 映射 | jitter + classification |
+| Constrained refinement | `optimized_action` | actuator space | MuJoCo 优化 latent state | jitter + classification |
+
+## 最推荐的比较方式
+
+### A. Landmark-space 比较
+
+这一组回答：
+
+**如果只在 landmark sequence 上做时序平滑，能否达到类似效果？**
+
+建议比较：
+
+- `raw`
+- `moving average`
+- `Savitzky-Golay`
+- `One-Euro`
+- `Kalman`
+- `optimized_full`
+
+建议指标：
+
+- velocity mean / rms
+- acceleration mean / rms
+- downstream few-shot classification
+
+### B. Actuator-space 比较
+
+这一组回答：
+
+**如果进入 ORCA actuator latent space，MuJoCo refinement 是否比 heuristic projection 更稳、更有判别性？**
+
+建议比较：
+
+- `corrected`
+- `optimized_action`
+
+如果后面做 ablation，可以继续加：
+
+- `optimized_action_no_huber`
+- `optimized_action_no_acceleration`
+- `optimized_action_no_temporal`
+
+建议指标：
+
+- actuator-space velocity / acceleration
+- downstream few-shot classification
+
+### C. 降维 baseline 比较
+
+这一组回答：
+
+**当前方法是不是只是因为低维化。**
+
+建议比较：
+
+- `raw`
+- `PCA-17`
+- `best PCA`
+- `corrected`
+- `optimized_action`
+
+建议指标：
+
+- downstream few-shot classification
+- 必要时补充 latent-space stability
+
+## 建议的执行顺序
+
+如果按工作量和收益排序，最推荐的执行顺序是：
+
+1. `moving average`
+2. `Savitzky-Golay`
+3. `One-Euro`
+4. `Kalman`
+5. 补 landmark-space jitter + classification
+6. 组织 actuator-space `corrected` vs `optimized_action` 的 jitter 和 classification
+7. 保留 `PCA-17` + `best PCA` 作为降维对照
+8. 最后再考虑 `GRU / LSTM` 这类 learned temporal denoising baseline
+
+## 为什么这个矩阵重要
+
+这张矩阵最终可以帮助论文回答四个不同的问题：
+
+1. `raw` 本身有多不稳定？
+2. 普通时序平滑能改善多少？
+3. 纯统计降维能改善多少？
+4. ORCA + MuJoCo 结构约束优化能否在这些 baseline 之上继续提升？
+
 来进一步验证 refined representation 对更强 temporal models 是否同样有帮助。
 
 ## 各类表示与数学内涵

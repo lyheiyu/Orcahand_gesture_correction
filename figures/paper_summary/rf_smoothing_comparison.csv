@@ -1,0 +1,7 @@
+method,accuracy_mean,macro_f1_mean,cohen_kappa_mean
+Raw,0.59375,0.54178,0.368823
+Moving Average,0.6062,0.5577,0.3893
+Savitzky-Golay,0.6125,0.5671,0.397
+One-Euro,0.6375,0.5897,0.4365
+Kalman,0.625,0.5815,0.419
+Optimized Full,0.7625,0.747976,0.637073
