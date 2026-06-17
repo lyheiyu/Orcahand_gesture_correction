@@ -428,6 +428,120 @@ smoothing / filtering 主要回答：
 
 **Smoothing baseline comparison does not claim algorithmic homogeneity; instead, it serves to show that the benefit of the proposed method cannot be reduced to ordinary temporal smoothing.**
 
+## 论文中的论证顺序应该怎么写
+
+这一部分也需要固定下来，因为它决定了整篇论文的 Results / Discussion 逻辑。
+
+当前最合理、最稳的论证顺序是：
+
+### 第一步：先排除 “只是 smoothing” 的解释
+
+首先比较：
+
+- `raw`
+- `moving average`
+- `Savitzky-Golay`
+- `One-Euro`
+- `Kalman`
+- `optimized_full`
+
+这里的重点不是证明 `optimized_full` 是全局最优表示，而是回答：
+
+**当前方法的提升，是否仅仅来自某种普通时间平滑？**
+
+如果 `optimized_full` 明显优于这些传统 smoothing/filtering baseline，那么可以得到第一层结论：
+
+**the gain cannot be explained by ordinary temporal smoothing alone**
+
+也就是说：
+
+- 当前方法不是简单 low-pass filtering
+- 不是把 landmark 轨迹做得更平一点就结束了
+- 即使回到 landmark space，它仍然比传统 smoothing 更强
+
+这是第一层排除性论证。
+
+### 第二步：再排除 “只是降维” 的解释
+
+在排除普通 smoothing 之后，下一步再比较：
+
+- `raw`
+- `PCA-17`
+- `best PCA`
+- `corrected`
+- `optimized_action`
+- `optimized_full`
+
+这里要回答的问题是：
+
+**当前方法的优势，是否只是因为把 noisy 高维 landmarks 压缩成了更低维的表示？**
+
+如果 `corrected` / `optimized_action` 仍然优于 PCA baseline，那么可以得到第二层结论：
+
+**the gain is not merely due to generic dimensionality reduction**
+
+也就是说：
+
+- 当前方法的优势不只是 feature 更短
+- 不只是 small-sample setting 下低维更容易分类
+- 真正有效的是结构约束下的表示方式
+
+这是第二层排除性论证。
+
+### 第三步：最后推出真正的核心解释
+
+当：
+
+- “只是 smoothing”
+- “只是 PCA / 降维”
+
+这两种替代解释都被排除之后，
+
+就可以自然推出最终主张：
+
+**性能提升更合理地归因于 ORCA embodiment prior、MuJoCo-constrained actuator-space refinement，以及 temporal regularization 的共同作用。**
+
+也就是说，最后真正要强调的不是：
+
+- 我们用了一个更复杂的滤波器
+- 我们用了一个更低维的特征
+
+而是：
+
+**我们在结构受限的 actuator latent space 中，对 noisy MediaPipe observations 做了约束优化，从而得到了更适合下游 few-shot gesture recognition 的表示。**
+
+### 为什么这个顺序最合理
+
+这个顺序的优点是，它不是在机械地“堆 baseline”，而是在做：
+
+**progressive elimination of alternative explanations**
+
+也就是逐层排除：
+
+1. 不是普通平滑
+2. 不是普通降维
+3. 因而更可能是结构约束 refinement 真正起作用
+
+这个逻辑对审稿人非常友好，因为它清楚回答了：
+
+- 为什么要做 smoothing baseline
+- 为什么还要做 PCA baseline
+- 为什么最后还能回到 `optimized_action` 的主结论
+
+### 论文里可以直接用的过渡句
+
+从 smoothing baseline 过渡到 PCA baseline，可以写成：
+
+**After showing that the proposed method is not reducible to conventional landmark-space smoothing, we further examine whether its advantage could simply arise from dimensionality reduction.**
+
+从 PCA baseline 过渡到最终结论，可以写成：
+
+**The results show that neither conventional smoothing nor generic dimensionality reduction fully explains the observed gains. Instead, the strongest performance is obtained from the MuJoCo-refined actuator representation, suggesting that structured latent-state refinement is the main source of improvement.**
+
+### 当前最值得记住的一句话
+
+**先证明不是 simple smoothing，再证明不是 generic dimensionality reduction，最后再论证 ORCA/MuJoCo 结构约束优化才是性能提升的关键来源。**
+
 ## 建议的 baseline 实验矩阵
 
 下面这张矩阵可以直接作为后续补实验的执行顺序参考。
