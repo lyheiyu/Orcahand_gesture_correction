@@ -1,0 +1,5 @@
+classifier,raw,corrected,optimized_action,optimized_full
+SVM,0.63125,0.80625,0.85,0.7125
+KNN,0.5875,0.7875,0.80625,0.6375
+RF,0.59375,0.86875,0.89375,0.7625
+MLP,0.625,0.7625,0.8125,0.6875

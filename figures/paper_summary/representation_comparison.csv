@@ -1,0 +1,7 @@
+method,accuracy_mean,macro_f1_mean,cohen_kappa_mean
+Raw,0.59375,0.54178,0.368823
+Best PCA (12D),0.85625,0.845595,0.779227
+PCA-17,0.825,0.800357,0.732533
+Corrected,0.86875,0.867857,0.803019
+Optimized Action,0.89375,0.883373,0.839496
+Optimized Full,0.7625,0.747976,0.637073
