@@ -542,6 +542,94 @@ smoothing / filtering 主要回答：
 
 **先证明不是 simple smoothing，再证明不是 generic dimensionality reduction，最后再论证 ORCA/MuJoCo 结构约束优化才是性能提升的关键来源。**
 
+## 研究思路演化应该怎么表述
+
+这一部分也建议固定下来，因为它能把“做 baseline”和“提出方法”之间的关系解释得更自然。
+
+当前最准确的说法不是：
+
+- 先随便做了一个 smoothing
+- 然后又做了一个 action 方法
+
+而是：
+
+**我们在系统地回答一个研究问题：MediaPipe 的抖动与漂移，是否可以仅靠普通 temporal smoothing 解决；如果不能，那么结构约束的 actuator-space refinement 是否更有效。**
+
+因此，研究思路应该写成下面这个顺序：
+
+### 1. 从 raw MediaPipe 出发
+
+原始 `raw landmarks` 存在：
+
+- jitter
+- drift
+- transient outliers
+- 局部结构不一致
+
+这意味着下游动态手势识别可能受到 noisy observations 的影响。
+
+### 2. 先用 smoothing baseline 检验一个更简单的解释
+
+第一步并不是直接提出复杂方法，而是先问：
+
+**如果这些误差只是普通时间噪声，那么简单 smoothing/filtering 是否已经足够？**
+
+因此引入：
+
+- moving average
+- Savitzky-Golay
+- One-Euro
+- Kalman
+
+这些 baseline 的目的不是作为论文主方法，而是作为：
+
+**simpler alternative explanations**
+
+如果它们已经足够好，那么结构约束优化的必要性就会减弱。
+
+### 3. 结果表明 smoothing 只有有限帮助
+
+当前结果说明：
+
+- smoothing 相比 `raw` 有一定提升
+- 但提升有限
+- 并不能达到结构约束方法的效果
+
+因此可以推断：
+
+**MediaPipe 的误差并不只是高频时间噪声，而更可能包含结构不一致、局部错误和瞬时异常观测。**
+
+这一步非常关键，因为它给出了引入 actuator-space refinement 的动机。
+
+### 4. 再引入结构约束表示与优化
+
+在确认“普通 smoothing 不够”之后，再进一步引入：
+
+- `corrected`
+- `optimized_action`
+- `optimized_full`
+
+这一步的逻辑是：
+
+**既然问题不只是 temporal fluctuation，那么就需要利用 ORCA embodiment prior 和 MuJoCo forward-kinematic constraints，在结构受限的 actuator space 中对观测进行修正。**
+
+### 5. 最终发现 optimized_action 最强
+
+实验结果表明：
+
+- `optimized_action` 是当前最好的下游表示
+- `optimized_full` 作为 landmark-space 输出也优于普通 smoothing
+
+因此最终可以得出更强的解释：
+
+**真正有效的不是“平滑得更厉害”，而是通过结构约束 latent-state refinement 对 noisy observations 进行了更合理的修正。**
+
+### 当前最简洁的一句话
+
+这部分最值得记录的一句话是：
+
+**We first tested whether conventional temporal smoothing was sufficient to suppress MediaPipe noise. The limited gains from smoothing baselines motivated the use of ORCA/MuJoCo-constrained actuator-space refinement, which ultimately produced the strongest downstream representation.**
+
 ## 建议的 baseline 实验矩阵
 
 下面这张矩阵可以直接作为后续补实验的执行顺序参考。

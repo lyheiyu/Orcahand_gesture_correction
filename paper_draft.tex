@@ -41,6 +41,8 @@ Our focus is therefore fourfold:
 
 The paper is intentionally organized around causal frame-wise latent-state refinement as the main method, while sequence aggregation and classification are treated as downstream evaluation rather than as the correction mechanism itself.
 
+An important part of the argument is to distinguish the proposed method from simpler alternatives. Since the target problem is temporal instability in estimated landmark sequences, a natural question is whether conventional landmark-space smoothing would already be sufficient. We therefore first compare against standard temporal filtering baselines. We then ask a second question: if structured actuator-space features perform better, is the gain merely due to dimensionality reduction? This motivates a separate comparison against PCA-reduced baselines. The overall logic of the paper is therefore to progressively rule out simpler explanations before attributing the improvement to ORCA/MuJoCo-constrained latent-state refinement.
+
 More specifically, this paper is positioned as a physics-informed, MuJoCo-constrained temporal refinement framework for improving the robustness of MediaPipe landmark sequences and their downstream few-shot gesture recognition performance, rather than as a new temporal gesture classifier.
 
 The main contributions of this work are:
@@ -178,6 +180,8 @@ Representation & Dim. & Source & Optimized & Temporal & Main role \\
 We evaluate the method on the current sequence dataset \texttt{gesture\_sequence\_dataset\_optimized\_v2.csv}, which contains 39 gesture sequences and 5409 frames in total. The present study uses three gesture classes, labeled 6, 7, and 8, and evaluates a few-shot setting with three training sequences per class. Each experiment is repeated 20 times with different train/test splits.
 
 \subsection{Frame-level Stability Evaluation}
+Frame-level evaluation focuses on jitter, drift, and transient outliers. Beyond comparing raw landmarks, heuristic actuator projections, and optimized actuator states, we additionally include conventional temporal smoothing baselines, including moving average, Savitzky--Golay, One-Euro, and Kalman filtering. The purpose of these baselines is to test whether the observed benefits could be explained by coordinate-space denoising alone. Because these baselines operate directly in landmark space, they are compared primarily against raw landmarks and the reconstructed landmark output of the proposed method.
+
 We evaluate temporal smoothness separately in actuator space and landmark space. This distinction is important because the latent actuator trajectory and the reconstructed landmark trajectory live in different spaces, with different dimensionalities and scales. Within each space, lower velocity- and acceleration-based statistics indicate smoother temporal behavior.
 
 \begin{table}[t]
@@ -213,6 +217,8 @@ Optimized Full & 0.4517 & 0.7190 & \textbf{0.5194} & 0.8169 \\
 Within the actuator space, the optimized action representation achieves lower velocity and acceleration than the heuristic corrected representation, indicating that robust fitting and acceleration regularization suppress transient drift more effectively in the latent state trajectory. Within the landmark space, the reconstructed sequence \texttt{optimized\_full} can be compared against raw MediaPipe landmarks, but these values should not be directly compared against actuator-space statistics.
 
 \subsection{Sequence-level Few-shot Classification}
+To measure downstream utility, we aggregate frame-level features into sequence descriptors and train few-shot classifiers on top of each representation. The key question is whether a temporally stable actuator trajectory is more discriminative than raw landmark coordinates under limited training data. The representation comparisons are organized in two stages. First, we compare against landmark-space smoothing baselines to determine whether ordinary temporal filtering is already sufficient. Second, we compare against PCA-reduced baselines to determine whether the gains from actuator-space representations can be explained by generic dimensionality reduction. Only after these two alternative explanations are examined do we compare the proposed structured representations directly.
+
 We next evaluate whether the cleaner frame-level representations lead to better sequence-level few-shot recognition. Table~\ref{tab:main_classifiers} reports the current results across four lightweight classifiers.
 
 \begin{table}[t]
@@ -283,8 +289,12 @@ This comparison shows that dimensionality reduction alone is helpful, but not su
 \subsection{Why Frame Correction Improves Sequence Classification}
 Sequence classifiers depend on stable frame-level evidence. When raw landmarks fluctuate because of viewpoint changes or self-occlusion, the resulting sequence descriptors mix gesture information with estimation noise. By correcting landmarks in actuator space, the proposed method suppresses nuisance variation before sequence aggregation.
 
+The smoothing baselines help sharpen this interpretation. If the main problem were only high-frequency temporal noise, then conventional coordinate-space filtering would be expected to close most of the gap. In our results, however, smoothing provides only limited gains over raw landmarks, while the structured ORCA/MuJoCo-based representations remain substantially stronger. This suggests that the dominant errors are not only temporal fluctuations, but also structurally inconsistent or locally implausible observations that are not adequately handled by independent per-coordinate filtering.
+
 \subsection{Reconstruction versus Discriminative Representation}
 A lower reconstruction error does not necessarily imply better classification. The reconstructed landmark space \texttt{optimized\_full} is useful for visualization and kinematic plausibility checks, but the compact actuator representation \texttt{optimized\_action} is more attractive for few-shot classification because it is lower-dimensional, structured, and semantically aligned with hand articulation.
+
+The PCA comparison provides a second clarification. Even if a compact representation improves classification, that improvement is not automatically evidence for embodiment-aware refinement, because generic dimensionality reduction can also help in low-data settings. For this reason, PCA baselines are necessary to test whether the benefit comes merely from compression. If the optimized actuator representation remains stronger than PCA-reduced baselines, then the improvement is more plausibly attributed to structured latent-state refinement rather than dimensionality reduction alone.
 
 \subsection{Limitation of Statistical Aggregation}
 Simple statistical aggregation is convenient and easy to interpret, but it discards temporal ordering beyond low-order summaries. Stronger sequence models such as recurrent networks or temporal transformers may extract additional discriminative information once a stable frame-level representation is available.
