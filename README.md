@@ -287,3 +287,83 @@ MediaPipe landmarks
 也就是说，下一阶段最适合把这个项目用成：
 
 **手势数据采集与物理先验特征生成工具。**
+## Experiment Automation
+
+The repository now includes two helper scripts for paper-oriented evaluation and figure generation.
+
+### 1. Auto-run classifier suites
+
+Use [generate_experiment_suite.py](generate_experiment_suite.py) when you want the pipeline to:
+
+- inspect the dataset and detect available feature groups automatically
+- run one or more classifiers
+- save aggregate metric CSVs
+- save per-classifier summary plots
+- save confusion matrices for every classifier/feature combination
+
+Example: structured representations on the main optimized dataset
+
+```powershell
+python .\generate_experiment_suite.py --dataset .\gesture_sequence_dataset_optimized_v2.csv --output-dir .\figures\auto_structured --sequence-mode --include-structured --include-pca17 --include-best-pca
+```
+
+Example: smoothing baselines on the smoothing-augmented dataset
+
+```powershell
+python .\generate_experiment_suite.py --dataset .\gesture_sequence_dataset_with_smoothing.csv --output-dir .\figures\auto_smoothing --sequence-mode --include-smoothing
+```
+
+Example: detect all available feature groups from the dataset automatically
+
+```powershell
+python .\generate_experiment_suite.py --dataset .\gesture_sequence_dataset_with_smoothing.csv --output-dir .\figures\auto_all --sequence-mode --include-all-detected
+```
+
+Typical outputs:
+
+- `experiment_results.csv`
+- `classification_svm.png`
+- `classification_knn.png`
+- `classification_rf.png`
+- `classification_mlp.png`
+- `cms\cm_*.png`
+- `run_manifest.csv`
+
+### 2. Build paper-ready summary figures
+
+Use [generate_paper_figures.py](generate_paper_figures.py) when you already have experiment CSVs and want a compact paper figure package.
+
+Default usage:
+
+```powershell
+python .\generate_paper_figures.py
+```
+
+If you also want appendix-level smoothing-across-classifier plots:
+
+```powershell
+python .\generate_paper_figures.py --smoothing-suite-csv .\figures\smoothing_suite.csv
+```
+
+Typical outputs in `figures\paper_summary`:
+
+- `smoothing_comparison.png`
+- `representation_comparison.png`
+- `classifier_accuracy_structured.png`
+- `jitter_actuator_space.png`
+- `jitter_landmark_space.png`
+- `appendix_pca_across_classifiers.png`
+- `appendix_smoothing_across_classifiers.png`
+- `best_confusion_matrix_manifest.csv`
+
+## Command Reference
+
+For a longer command checklist covering:
+
+- smoothing dataset generation
+- PCA sweep
+- jitter evaluation
+- best confusion matrices
+- paper summary export
+
+see [PAPER_FIGURE_COMMANDS.md](PAPER_FIGURE_COMMANDS.md).
