@@ -14,6 +14,85 @@ Recommended environment:
 conda activate orca
 ```
 
+## 0. Demo / Teleop / Data Collection
+
+This section collects the most commonly used runtime commands for live demos,
+teleoperation, and dataset collection.
+
+### 0.1 Main MediaPipe Teleop Demo
+
+Current recommended command for the palm-facing right-hand demo:
+
+```powershell
+python .\mediapipe_teleop.py --sim-render-mode rgb_array --target-hand right --camera-side palm --control-space display --hand-landmarker-model ".\hand_landmarker.task" --disable-auto-base --smoothing 0.10
+```
+
+Meaning of the most important options:
+
+- `--target-hand right`
+  - drive ORCA from the detected right hand
+- `--camera-side palm`
+  - use the palm-facing-camera convention
+- `--control-space display`
+  - control ORCA from the displayed mirrored image space
+- `--disable-auto-base`
+  - keep the base fixed during the hand-only demo
+- `--smoothing 0.10`
+  - apply light action smoothing for a more stable demo
+
+### 0.2 Back-of-Hand Teleop Variant
+
+If the camera mainly sees the back of the hand instead of the palm:
+
+```powershell
+python .\mediapipe_teleop.py --sim-render-mode rgb_array --target-hand right --camera-side back --control-space display --hand-landmarker-model ".\hand_landmarker.task" --disable-auto-base --smoothing 0.10
+```
+
+### 0.3 Teleop with Base Motion Enabled
+
+If you want the teleop scene to also use the base yaw / pitch / roll mapping:
+
+```powershell
+python .\mediapipe_teleop.py --sim-render-mode rgb_array --target-hand right --camera-side palm --control-space display --hand-landmarker-model ".\hand_landmarker.task" --smoothing 0.10
+```
+
+Note:
+
+- omit `--disable-auto-base`
+- current base control is still heuristic and is better for demos than for quantitative evaluation
+
+### 0.4 Collect a New Gesture Sequence
+
+Example command for collecting one new optimized sequence and exporting the v2
+feature groups:
+
+```powershell
+python .\collect_gesture_dataset.py --label 8 --output gesture_sequence_dataset_more.csv --hand-landmarker-model ".\hand_landmarker.task" --target-hand right --sequence-mode --export-optimized --version v2
+```
+
+Typical usage:
+
+- change `--label` to the gesture class you are recording
+- change `--output` if you want to store the new capture in a different CSV
+
+### 0.5 Merge / Continue Using Datasets
+
+Main current optimized dataset for experiments:
+
+```powershell
+gesture_sequence_dataset_optimized_v2.csv
+```
+
+Smoothing-augmented dataset:
+
+```powershell
+gesture_sequence_dataset_with_smoothing.csv
+```
+
+If you collect additional sequences first and want them reflected in later
+classification or figure-generation runs, make sure the downstream commands point
+to the updated dataset file you actually want to evaluate.
+
 ## 1. Generate Smoothing Baseline Dataset
 
 This creates `gesture_sequence_dataset_with_smoothing.csv` from the raw landmark columns in `gesture_sequence_dataset_optimized_v2.csv`.

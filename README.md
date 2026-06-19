@@ -360,6 +360,8 @@ Typical outputs in `figures\paper_summary`:
 
 For a longer command checklist covering:
 
+- live teleop demo startup
+- gesture-sequence collection
 - smoothing dataset generation
 - PCA sweep
 - jitter evaluation
