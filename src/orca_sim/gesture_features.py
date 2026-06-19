@@ -127,21 +127,16 @@ def _classify_palm_state(points: np.ndarray) -> str:
 def palm_normal_vector(points: np.ndarray) -> np.ndarray:
     palm_across = _unit(_vec(points, PINKY_MCP, INDEX_MCP))
     palm_forward = _unit(_vec(points, WRIST, MIDDLE_MCP))
-    return _unit(np.cross(palm_across, palm_forward))
+    return _unit(np.cross(palm_forward, palm_across))
 
 
 def _wrist_control_from_points(points: np.ndarray) -> float:
-    palm_across = _unit(_vec(points, PINKY_MCP, INDEX_MCP))
     palm_forward = _unit(_vec(points, WRIST, MIDDLE_MCP))
-    palm_normal = _unit(np.cross(palm_across, palm_forward))
-
-    if _norm(palm_forward) < 1e-8 or _norm(palm_normal) < 1e-8:
+    if _norm(palm_forward) < 1e-8:
         return 0.0
 
-    yaw_deg = math.degrees(math.atan2(palm_forward[0], max(1e-6, palm_forward[1])))
-    roll_deg = math.degrees(math.atan2(palm_normal[0], max(1e-6, abs(palm_normal[2]))))
-    wrist_deg = (0.65 * yaw_deg) + (0.35 * roll_deg)
-    return _clip(wrist_deg / 65.0, -1.0, 1.0)
+    pitch_deg = math.degrees(math.atan2(-palm_forward[2], max(1e-6, abs(palm_forward[1]))))
+    return _clip(pitch_deg / 55.0, -1.0, 1.0)
 
 
 def normalize_landmarks(points: np.ndarray) -> np.ndarray:
@@ -159,18 +154,44 @@ def normalize_landmarks(points: np.ndarray) -> np.ndarray:
     return normalized
 
 
+def _thumb_open_controls(
+    points: np.ndarray,
+    palm_normal: np.ndarray,
+    index_base: np.ndarray,
+    middle_base: np.ndarray,
+    thumb_base: np.ndarray,
+) -> tuple[float, float]:
+    """Mirror the teleop thumb heuristic for offline feature extraction."""
+    palm_width = max(_norm(points[INDEX_MCP] - points[PINKY_MCP]), 1e-6)
+    thumb_index_distance = _norm(points[THUMB_TIP] - points[INDEX_MCP]) / palm_width
+
+    thumb_spread_deg = abs(_signed_angle_degrees(index_base, thumb_base, palm_normal))
+    thumb_plane_open = _clip((thumb_spread_deg - 10.0) / 35.0, 0.0, 1.0)
+    thumb_distance_open = _clip((thumb_index_distance - 0.45) / 0.65, 0.0, 1.0)
+
+    thumb_open = (0.7 * thumb_plane_open) + (0.3 * thumb_distance_open)
+
+    thumb_forward_deg = abs(_signed_angle_degrees(middle_base, thumb_base, palm_normal))
+    thumb_cmc = _clip((thumb_forward_deg - 35.0) / 30.0, -1.0, 1.0)
+    return float(thumb_open), float(thumb_cmc)
+
+
 def extract_hand_features(points: np.ndarray) -> HandFeatures:
     points = np.asarray(points, dtype=np.float64)
-    palm_normal = np.cross(_vec(points, PINKY_MCP, INDEX_MCP), _vec(points, WRIST, MIDDLE_MCP))
+    palm_normal = np.cross(_vec(points, WRIST, MIDDLE_MCP), _vec(points, PINKY_MCP, INDEX_MCP))
 
     index_base = _project_to_plane(_vec(points, INDEX_MCP, INDEX_PIP), palm_normal)
     middle_base = _project_to_plane(_vec(points, MIDDLE_MCP, MIDDLE_PIP), palm_normal)
     ring_base = _project_to_plane(_vec(points, RING_MCP, RING_PIP), palm_normal)
     pinky_base = _project_to_plane(_vec(points, PINKY_MCP, PINKY_PIP), palm_normal)
-
-    thumb_index_distance = _norm(points[THUMB_TIP] - points[INDEX_MCP])
-    palm_width = max(_norm(points[INDEX_MCP] - points[PINKY_MCP]), 1e-6)
-    thumb_open = _clip((thumb_index_distance / palm_width - 0.35) / 0.9, 0.0, 1.0)
+    thumb_base = _project_to_plane(_vec(points, THUMB_CMC, THUMB_MCP), palm_normal)
+    thumb_open, thumb_cmc = _thumb_open_controls(
+        points,
+        palm_normal,
+        index_base,
+        middle_base,
+        thumb_base,
+    )
     palm_normal_unit = palm_normal_vector(points)
 
     return HandFeatures(
@@ -191,7 +212,7 @@ def extract_hand_features(points: np.ndarray) -> HandFeatures:
         index_abd=_normalize_spread(_signed_angle_degrees(middle_base, index_base, palm_normal)),
         index_mcp=_normalize_flex(_angle_degrees(points[WRIST], points[INDEX_MCP], points[INDEX_PIP])),
         index_pip=_normalize_flex(_angle_degrees(points[INDEX_MCP], points[INDEX_PIP], points[INDEX_DIP])),
-        thumb_cmc=(2.0 * thumb_open) - 1.0,
+        thumb_cmc=thumb_cmc,
         thumb_abd=thumb_open,
         thumb_mcp=_normalize_flex(_angle_degrees(points[THUMB_CMC], points[THUMB_MCP], points[THUMB_IP])),
         thumb_pip=_normalize_flex(_angle_degrees(points[THUMB_MCP], points[THUMB_IP], points[THUMB_TIP])),
@@ -203,6 +224,12 @@ class OrcaFeatureProjector:
         self.env = OrcaHandRight(render_mode=None, version=version)
         self._actuator_index = {
             self.env.model.actuator(i).name: i for i in range(self.env.model.nu)
+        }
+        self._joint_qpos_index = {
+            self.env.model.actuator(i).name: int(
+                self.env.model.jnt_qposadr[int(self.env.model.actuator_trnid[i, 0])]
+            )
+            for i in range(self.env.model.nu)
         }
 
     def close(self) -> None:
@@ -253,7 +280,8 @@ class OrcaFeatureProjector:
         features = extract_hand_features(points)
         action = np.zeros(self.env.model.nu, dtype=np.float32)
 
-        self._set_signed(action, "right_wrist_actuator", features.wrist)
+        # Keep the offline feature projection consistent with teleop wrist direction.
+        self._set_signed_neutral(action, "right_wrist_actuator", -features.wrist)
         self._set_signed(action, "right_p-abd_actuator", features.pinky_abd)
         self._set_unit(action, "right_p-mcp_actuator", features.pinky_mcp)
         self._set_unit(action, "right_p-pip_actuator", features.pinky_pip)
@@ -266,7 +294,7 @@ class OrcaFeatureProjector:
         self._set_signed(action, "right_i-abd_actuator", features.index_abd)
         self._set_unit(action, "right_i-mcp_actuator", features.index_mcp)
         self._set_unit(action, "right_i-pip_actuator", features.index_pip)
-        self._set_signed(action, "right_t-cmc_actuator", features.thumb_cmc)
+        self._set_signed_neutral(action, "right_t-cmc_actuator", features.thumb_cmc)
         self._set_unit(action, "right_t-abd_actuator", features.thumb_abd)
         self._set_unit(action, "right_t-mcp_actuator", features.thumb_mcp)
         self._set_unit(action, "right_t-pip_actuator", features.thumb_pip)
@@ -286,6 +314,17 @@ class OrcaFeatureProjector:
         midpoint = 0.5 * (low + high)
         half_range = 0.5 * (high - low)
         action[index] = midpoint + (value * half_range)
+
+    def _set_signed_neutral(self, action: np.ndarray, actuator_name: str, value: float) -> None:
+        index = self._actuator_index[actuator_name]
+        low = self.env.action_low[index]
+        high = self.env.action_high[index]
+        neutral = float(self.env.model.qpos0[self._joint_qpos_index[actuator_name]])
+        value = _clip(value, -1.0, 1.0)
+        if value >= 0.0:
+            action[index] = neutral + value * (high - neutral)
+        else:
+            action[index] = neutral + value * (neutral - low)
 
     def _set_unit(self, action: np.ndarray, actuator_name: str, value: float) -> None:
         index = self._actuator_index[actuator_name]

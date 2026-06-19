@@ -79,6 +79,8 @@ class HandFeatures:
     palm_normal_x: float
     palm_normal_y: float
     palm_normal_z: float
+    hand_center_x: float
+    hand_center_y: float
     base_yaw: float
     base_pitch: float
     base_roll: float
@@ -112,6 +114,7 @@ class BaseCalibration:
     yaw: float = 0.0
     pitch: float = 0.0
     roll: float = 0.0
+    wrist: float = 0.0
     calibrated: bool = False
 
 
@@ -199,10 +202,45 @@ def _map_signed_to_range(signed_value: float, low: float, high: float) -> float:
     return float(midpoint + signed_value * half_range)
 
 
+def _map_signed_about_neutral(signed_value: float, low: float, neutral: float, high: float) -> float:
+    signed_value = _clip(signed_value, -1.0, 1.0)
+    if signed_value >= 0.0:
+        return float(neutral + signed_value * (high - neutral))
+    return float(neutral + signed_value * (neutral - low))
+
+
 def _apply_deadzone(value: float, threshold: float = 0.08) -> float:
     if abs(value) <= threshold:
         return 0.0
     return float(value)
+
+
+def _thumb_open_controls(
+    points: np.ndarray,
+    palm_normal: np.ndarray,
+    index_base: np.ndarray,
+    middle_base: np.ndarray,
+    thumb_base: np.ndarray,
+) -> tuple[float, float]:
+    """Estimate thumb openness from both in-plane geometry and tip distance.
+
+    A pure thumb-tip distance heuristic is fragile for palm-facing views because
+    depth foreshortening can make the thumb look overly open. We therefore mix:
+    1. the in-plane spread angle of the thumb base relative to the index ray; and
+    2. the thumb-tip to index-root distance normalized by palm width.
+    """
+    palm_width = max(_norm(points[INDEX_MCP] - points[PINKY_MCP]), 1e-6)
+    thumb_index_distance = _norm(points[THUMB_TIP] - points[INDEX_MCP]) / palm_width
+
+    thumb_spread_deg = abs(_signed_angle_degrees(index_base, thumb_base, palm_normal))
+    thumb_plane_open = _clip((thumb_spread_deg - 10.0) / 35.0, 0.0, 1.0)
+    thumb_distance_open = _clip((thumb_index_distance - 0.45) / 0.65, 0.0, 1.0)
+
+    thumb_open = (0.7 * thumb_plane_open) + (0.3 * thumb_distance_open)
+
+    thumb_forward_deg = abs(_signed_angle_degrees(middle_base, thumb_base, palm_normal))
+    thumb_cmc = _clip((thumb_forward_deg - 35.0) / 30.0, -1.0, 1.0)
+    return float(thumb_open), float(thumb_cmc)
 
 
 def _default_action(env: OrcaHandRight) -> np.ndarray:
@@ -226,6 +264,15 @@ def _landmarks_to_array(hand_landmarks) -> np.ndarray:
         [[lm.x, lm.y, lm.z] for lm in landmarks],
         dtype=np.float64,
     )
+
+
+def _apply_camera_side(points: np.ndarray, camera_side: str) -> np.ndarray:
+    adjusted = np.asarray(points, dtype=np.float64).copy()
+    if camera_side == "palm":
+        # Reinterpret palm-facing-camera observations using the back-facing
+        # convention that the current heuristic mapping was originally tuned for.
+        adjusted[:, 2] *= -1.0
+    return adjusted
 
 
 def _normalize_handedness_label(label: str | None) -> str:
@@ -254,6 +301,26 @@ def _unmirror_points(points: np.ndarray, mirror: bool) -> np.ndarray:
     corrected = points.copy()
     corrected[:, 0] = 1.0 - corrected[:, 0]
     return corrected
+
+
+def _points_for_control(points: np.ndarray, mirror: bool, control_space: str) -> np.ndarray:
+    """Choose whether control should follow the displayed image or world geometry."""
+    if control_space == "display":
+        return points
+    return _unmirror_points(points, mirror)
+
+
+def _apply_thumb_view_convention(features: HandFeatures, camera_side: str) -> HandFeatures:
+    """Correct thumb-side convention for palm-facing capture setups.
+
+    The current ORCA thumb abduction convention was originally tuned against a
+    different viewing assumption. For palm-facing webcam control, the lateral
+    thumb spread often needs to be flipped so the robot thumb stays on the same
+    visual side as the observed human thumb.
+    """
+    if camera_side == "palm":
+        features.thumb_abd = 1.0 - features.thumb_abd
+    return features
 
 
 def _select_hand_solutions(results, target_hand: str, mirror: bool) -> SelectedHand | None:
@@ -307,22 +374,15 @@ def _resolve_default_task_model_path() -> Path | None:
 
 def _wrist_control_from_points(points: np.ndarray) -> float:
     wrist = points[WRIST]
-    index_mcp = points[INDEX_MCP]
-    pinky_mcp = points[PINKY_MCP]
     middle_mcp = points[MIDDLE_MCP]
-
-    palm_across = _unit(index_mcp - pinky_mcp)
     palm_forward = _unit(middle_mcp - wrist)
-    palm_normal = _unit(np.cross(palm_across, palm_forward))
-
-    if _norm(palm_forward) < 1e-8 or _norm(palm_normal) < 1e-8:
+    if _norm(palm_forward) < 1e-8:
         return 0.0
 
-    # Approximate a single wrist DOF by blending palm yaw with palm roll.
-    yaw_deg = math.degrees(math.atan2(palm_forward[0], max(1e-6, palm_forward[1])))
-    roll_deg = math.degrees(math.atan2(palm_normal[0], max(1e-6, abs(palm_normal[2]))))
-    wrist_deg = (0.65 * yaw_deg) + (0.35 * roll_deg)
-    return _clip(wrist_deg / 65.0, -1.0, 1.0)
+    # Use forward-direction pitch for the single wrist DOF.
+    # This is much closer to flexion/extension than the earlier yaw/roll blend.
+    pitch_deg = math.degrees(math.atan2(-palm_forward[2], max(1e-6, abs(palm_forward[1]))))
+    return _clip(pitch_deg / 55.0, -1.0, 1.0)
 
 
 def _classify_palm_state(points: np.ndarray) -> str:
@@ -333,7 +393,7 @@ def _classify_palm_state(points: np.ndarray) -> str:
 
     palm_across = _unit(index_mcp - pinky_mcp)
     palm_forward = _unit(middle_mcp - wrist)
-    palm_normal = _unit(np.cross(palm_across, palm_forward))
+    palm_normal = _unit(np.cross(palm_forward, palm_across))
 
     if _norm(palm_normal) < 1e-8:
         return "unknown"
@@ -354,7 +414,7 @@ def _palm_normal(points: np.ndarray) -> np.ndarray:
 
     palm_across = _unit(index_mcp - pinky_mcp)
     palm_forward = _unit(middle_mcp - wrist)
-    return _unit(np.cross(palm_across, palm_forward))
+    return _unit(np.cross(palm_forward, palm_across))
 
 
 def _base_rotation_from_points(points: np.ndarray) -> tuple[float, float, float]:
@@ -365,7 +425,7 @@ def _base_rotation_from_points(points: np.ndarray) -> tuple[float, float, float]
 
     palm_across = _unit(index_mcp - pinky_mcp)
     palm_forward = _unit(middle_mcp - wrist)
-    palm_normal = _unit(np.cross(palm_across, palm_forward))
+    palm_normal = _unit(np.cross(palm_forward, palm_across))
 
     if _norm(palm_across) < 1e-8 or _norm(palm_forward) < 1e-8 or _norm(palm_normal) < 1e-8:
         return 0.0, 0.0, 0.0
@@ -382,10 +442,27 @@ def _base_rotation_from_points(points: np.ndarray) -> tuple[float, float, float]
     return base_yaw, base_pitch, base_roll
 
 
-def extract_hand_features(points: np.ndarray) -> HandFeatures:
+def _base_pose_from_position(points: np.ndarray) -> tuple[float, float, float, float, float]:
+    wrist = points[WRIST]
+    middle_mcp = points[MIDDLE_MCP]
+    palm_center = 0.5 * (wrist + middle_mcp)
+
+    center_x = float(palm_center[0])
+    center_y = float(palm_center[1])
+
+    # Horizontal hand motion drives whole-hand yaw.
+    base_yaw = _clip((center_x - 0.5) / 0.22, -1.0, 1.0)
+    # Vertical hand motion drives whole-hand pitch.
+    base_pitch = _clip((0.55 - center_y) / 0.22, -1.0, 1.0)
+    # Keep roll neutral in position-follow mode by default.
+    base_roll = 0.0
+    return center_x, center_y, base_yaw, base_pitch, base_roll
+
+
+def extract_hand_features(points: np.ndarray, base_control_mode: str = "orientation") -> HandFeatures:
     palm_x = _vec(points, PINKY_MCP, INDEX_MCP)
     palm_y = _vec(points, WRIST, MIDDLE_MCP)
-    palm_normal = np.cross(palm_x, palm_y)
+    palm_normal = np.cross(palm_y, palm_x)
     palm_normal_unit = _palm_normal(points)
 
     index_base = _project_to_plane(_vec(points, INDEX_MCP, INDEX_PIP), palm_normal)
@@ -394,16 +471,30 @@ def extract_hand_features(points: np.ndarray) -> HandFeatures:
     pinky_base = _project_to_plane(_vec(points, PINKY_MCP, PINKY_PIP), palm_normal)
     thumb_base = _project_to_plane(_vec(points, THUMB_CMC, THUMB_MCP), palm_normal)
 
-    base_yaw, base_pitch, base_roll = _base_rotation_from_points(points)
-    thumb_index_distance = _norm(points[THUMB_TIP] - points[INDEX_MCP])
-    palm_width = max(_norm(points[INDEX_MCP] - points[PINKY_MCP]), 1e-6)
-    thumb_open = _clip((thumb_index_distance / palm_width - 0.35) / 0.9, 0.0, 1.0)
+    if base_control_mode == "position":
+        hand_center_x, hand_center_y, base_yaw, base_pitch, base_roll = _base_pose_from_position(points)
+    else:
+        base_yaw, base_pitch, base_roll = _base_rotation_from_points(points)
+        wrist = points[WRIST]
+        middle_mcp = points[MIDDLE_MCP]
+        palm_center = 0.5 * (wrist + middle_mcp)
+        hand_center_x = float(palm_center[0])
+        hand_center_y = float(palm_center[1])
+    thumb_open, thumb_cmc = _thumb_open_controls(
+        points,
+        palm_normal,
+        index_base,
+        middle_base,
+        thumb_base,
+    )
 
     return HandFeatures(
         palm_state=_classify_palm_state(points),
         palm_normal_x=float(palm_normal_unit[0]),
         palm_normal_y=float(palm_normal_unit[1]),
         palm_normal_z=float(palm_normal_unit[2]),
+        hand_center_x=hand_center_x,
+        hand_center_y=hand_center_y,
         base_yaw=base_yaw,
         base_pitch=base_pitch,
         base_roll=base_roll,
@@ -420,7 +511,7 @@ def extract_hand_features(points: np.ndarray) -> HandFeatures:
         index_abd=_normalize_spread(_signed_angle_degrees(middle_base, index_base, palm_normal)),
         index_mcp=_normalize_flex(_angle_degrees(points[WRIST], points[INDEX_MCP], points[INDEX_PIP])),
         index_pip=_normalize_flex(_angle_degrees(points[INDEX_MCP], points[INDEX_PIP], points[INDEX_DIP])),
-        thumb_cmc=(2.0 * thumb_open) - 1.0,
+        thumb_cmc=thumb_cmc,
         thumb_abd=thumb_open,
         thumb_mcp=_normalize_flex(_angle_degrees(points[THUMB_CMC], points[THUMB_MCP], points[THUMB_IP])),
         thumb_pip=_normalize_flex(_angle_degrees(points[THUMB_MCP], points[THUMB_IP], points[THUMB_TIP])),
@@ -442,6 +533,27 @@ def _set_named_signed(
     if index is None:
         return
     action[index] = _map_signed_to_range(signed_value, env.action_low[index], env.action_high[index])
+
+
+def _set_named_signed_neutral(
+    action: np.ndarray,
+    env: BaseOrcaHandEnv,
+    actuator_index: dict[str, int],
+    actuator_name: str,
+    signed_value: float,
+) -> None:
+    index = actuator_index.get(actuator_name)
+    if index is None:
+        return
+    joint_id = int(env.model.actuator_trnid[index, 0])
+    qpos_idx = int(env.model.jnt_qposadr[joint_id])
+    neutral = float(env.model.qpos0[qpos_idx])
+    action[index] = _map_signed_about_neutral(
+        signed_value,
+        env.action_low[index],
+        neutral,
+        env.action_high[index],
+    )
 
 
 def _set_named_unit(
@@ -493,7 +605,8 @@ def features_to_action(features: HandFeatures, env: BaseOrcaHandEnv) -> np.ndarr
     _set_named_signed(action, env, actuator_index, "teleop_base_yaw_actuator", features.base_yaw)
     _set_named_signed(action, env, actuator_index, "teleop_base_pitch_actuator", features.base_pitch)
     _set_named_signed(action, env, actuator_index, "teleop_base_roll_actuator", features.base_roll)
-    _set_named_signed(action, env, actuator_index, "right_wrist_actuator", features.wrist)
+    # Wrist uses the model's default qpos as the neutral point instead of the ctrlrange midpoint.
+    _set_named_signed_neutral(action, env, actuator_index, "right_wrist_actuator", -features.wrist)
     _set_named_signed(action, env, actuator_index, "right_p-abd_actuator", features.pinky_abd)
     _set_named_unit(action, env, actuator_index, "right_p-mcp_actuator", features.pinky_mcp)
     _set_named_unit(action, env, actuator_index, "right_p-pip_actuator", features.pinky_pip)
@@ -506,8 +619,8 @@ def features_to_action(features: HandFeatures, env: BaseOrcaHandEnv) -> np.ndarr
     _set_named_signed(action, env, actuator_index, "right_i-abd_actuator", features.index_abd)
     _set_named_unit(action, env, actuator_index, "right_i-mcp_actuator", features.index_mcp)
     _set_named_unit(action, env, actuator_index, "right_i-pip_actuator", features.index_pip)
-    _set_named_signed(action, env, actuator_index, "right_t-cmc_actuator", features.thumb_cmc)
-    _set_named_unit(action, env, actuator_index, "right_t-abd_actuator", features.thumb_abd)
+    _set_named_signed_neutral(action, env, actuator_index, "right_t-cmc_actuator", -features.thumb_cmc)
+    _set_named_unit(action, env, actuator_index, "right_t-abd_actuator", 1.0 - features.thumb_abd)
     _set_named_unit(action, env, actuator_index, "right_t-mcp_actuator", features.thumb_mcp)
     _set_named_unit(action, env, actuator_index, "right_t-pip_actuator", features.thumb_pip)
     return np.clip(action, env.action_low, env.action_high)
@@ -675,6 +788,24 @@ def main() -> None:
         help="Only drive the robot from the selected detected hand.",
     )
     parser.add_argument(
+        "--camera-side",
+        choices=["back", "palm"],
+        default="back",
+        help="Which side of the human hand is mainly facing the camera.",
+    )
+    parser.add_argument(
+        "--control-space",
+        choices=["display", "world"],
+        default="display",
+        help="Drive ORCA from the mirrored display space or from unmirrored world-space landmarks.",
+    )
+    parser.add_argument(
+        "--base-control-mode",
+        choices=["orientation", "position"],
+        default="position",
+        help="Drive the teleop base from palm orientation or from hand position in the image.",
+    )
+    parser.add_argument(
         "--fixed-base",
         action="store_true",
         help="Use the original fixed-base scene instead of the teleop scene with base yaw/pitch joints.",
@@ -825,8 +956,14 @@ def main() -> None:
                         tracked = True
                         tracked_label = selected.label
                         hand_landmarks = selected.landmarks
-                        points = _unmirror_points(_landmarks_to_array(hand_landmarks), mirror)
-                        features = extract_hand_features(points)
+                        points = _points_for_control(
+                            _landmarks_to_array(hand_landmarks),
+                            mirror,
+                            args.control_space,
+                        )
+                        points = _apply_camera_side(points, args.camera_side)
+                        features = extract_hand_features(points, base_control_mode=args.base_control_mode)
+                        features = _apply_thumb_view_convention(features, args.camera_side)
                         displayed_palm_state = features.palm_state
                         displayed_palm_normal = (
                             features.palm_normal_x,
@@ -837,6 +974,7 @@ def main() -> None:
                             features.base_yaw,
                             features.base_pitch,
                             features.base_roll,
+                            features.wrist,
                         )
                         if args.disable_auto_base:
                             features.base_yaw = 0.0
@@ -848,11 +986,13 @@ def main() -> None:
                                     yaw=features.base_yaw,
                                     pitch=features.base_pitch,
                                     roll=features.base_roll,
+                                    wrist=features.wrist,
                                     calibrated=True,
                                 )
                             features.base_yaw = _apply_deadzone(features.base_yaw - base_calibration.yaw)
                             features.base_pitch = _apply_deadzone(features.base_pitch - base_calibration.pitch)
                             features.base_roll = _apply_deadzone(features.base_roll - base_calibration.roll)
+                            features.wrist = _apply_deadzone(features.wrist - base_calibration.wrist)
                             features.base_yaw = _clip(features.base_yaw * base_gain, -1.0, 1.0)
                             features.base_pitch = _clip(features.base_pitch * base_gain, -1.0, 1.0)
                             features.base_roll = _clip(features.base_roll * base_roll_gain, -1.0, 1.0)
@@ -874,8 +1014,14 @@ def main() -> None:
                         tracked = True
                         tracked_label = selected.label
                         hand_landmarks = selected.landmarks
-                        points = _unmirror_points(_landmarks_to_array(hand_landmarks), mirror)
-                        features = extract_hand_features(points)
+                        points = _points_for_control(
+                            _landmarks_to_array(hand_landmarks),
+                            mirror,
+                            args.control_space,
+                        )
+                        points = _apply_camera_side(points, args.camera_side)
+                        features = extract_hand_features(points, base_control_mode=args.base_control_mode)
+                        features = _apply_thumb_view_convention(features, args.camera_side)
                         displayed_palm_state = features.palm_state
                         displayed_palm_normal = (
                             features.palm_normal_x,
@@ -886,6 +1032,7 @@ def main() -> None:
                             features.base_yaw,
                             features.base_pitch,
                             features.base_roll,
+                            features.wrist,
                         )
                         if args.disable_auto_base:
                             features.base_yaw = 0.0
@@ -897,11 +1044,13 @@ def main() -> None:
                                     yaw=features.base_yaw,
                                     pitch=features.base_pitch,
                                     roll=features.base_roll,
+                                    wrist=features.wrist,
                                     calibrated=True,
                                 )
                             features.base_yaw = _apply_deadzone(features.base_yaw - base_calibration.yaw)
                             features.base_pitch = _apply_deadzone(features.base_pitch - base_calibration.pitch)
                             features.base_roll = _apply_deadzone(features.base_roll - base_calibration.roll)
+                            features.wrist = _apply_deadzone(features.wrist - base_calibration.wrist)
                             features.base_yaw = _clip(features.base_yaw * base_gain, -1.0, 1.0)
                             features.base_pitch = _clip(features.base_pitch * base_gain, -1.0, 1.0)
                             features.base_roll = _clip(features.base_roll * base_roll_gain, -1.0, 1.0)
@@ -980,6 +1129,7 @@ def main() -> None:
                         yaw=current_raw_base[0],
                         pitch=current_raw_base[1],
                         roll=current_raw_base[2],
+                        wrist=current_raw_base[3],
                         calibrated=True,
                     )
                 if key == ord("m"):
