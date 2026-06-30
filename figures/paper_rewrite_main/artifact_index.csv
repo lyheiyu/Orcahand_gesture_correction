@@ -1,0 +1,7 @@
+artifact,path
+smoothing_comparison,C:\D\projects\Orca robot hand\orca sim\orca_sim\figures\paper_summary\smoothing_comparison.png
+representation_comparison,C:\D\projects\Orca robot hand\orca sim\orca_sim\figures\paper_summary\representation_comparison.png
+classifier_accuracy_structured,C:\D\projects\Orca robot hand\orca sim\orca_sim\figures\paper_summary\classifier_accuracy_structured.png
+jitter_actuator_space,C:\D\projects\Orca robot hand\orca sim\orca_sim\figures\paper_summary\jitter_actuator_space.png
+jitter_landmark_space,C:\D\projects\Orca robot hand\orca sim\orca_sim\figures\paper_summary\jitter_landmark_space.png
+best_confusion_matrix_manifest,C:\D\projects\Orca robot hand\orca sim\orca_sim\figures\paper_summary\best_confusion_matrix_manifest.csv
