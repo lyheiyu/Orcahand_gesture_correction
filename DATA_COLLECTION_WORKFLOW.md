@@ -192,6 +192,7 @@ python .\collect_gesture_dataset.py --label 7 --output gesture_sequence_dataset.
 python .\collect_gesture_dataset.py --label 8 --output gesture_sequence_dataset.csv --target-hand right --hand-landmarker-model ".\hand_landmarker.task" --sequence-mode
 python .\fit_mediapipe_frame.py --dataset .\gesture_sequence_dataset.csv --label 6
 python .\train_svm.py --dataset .\gesture_sequence_dataset.csv --feature-set corrected --sequence-mode --shots-per-class 3 --repeats 20
+python .\collect_gesture_dataset.py --label orchid_palm --output gesture_sequence_dataset_chinese_dance_6class.csv --hand-landmarker-model ".\hand_landmarker.task" --target-hand right --sequence-mode --export-optimized --version v2
 ```
 
 
