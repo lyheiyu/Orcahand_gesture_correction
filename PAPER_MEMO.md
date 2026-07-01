@@ -352,25 +352,31 @@ smoothing / filtering 主要回答：
 
 ### 当前 smoothing baseline 的实验结论
 
-在 RandomForest 分类器下，当前结果为：
+在当前 `6-class Chinese dance` 数据集、`RandomForest` 分类器下，结果为：
 
-- `raw`: `0.5938`
-- `moving_average_raw`: `0.6062`
-- `savgol_raw`: `0.6125`
-- `oneeuro_raw`: `0.6375`
-- `kalman_raw`: `0.6250`
-- `optimized_full`: `0.7625`
+- `raw`: `0.8708 ± 0.0617`
+- `moving_average_raw`: `0.8667 ± 0.0890`
+- `savgol_raw`: `0.8667 ± 0.0808`
+- `oneeuro_raw`: `0.8792 ± 0.0853`
+- `kalman_raw`: `0.9125 ± 0.0720`
+- `corrected`: `0.9083 ± 0.0741`
+- `optimized_action`: `0.9292 ± 0.0660`
+- `optimized_full`: `0.8750 ± 0.0968`
 
-这个结果说明：
+这一组结果和 landmark-space jitter 结果合起来说明：
 
-1. 普通 smoothing / filtering 确实能比 raw 略有提升
-2. 但这种提升是有限的
-3. `optimized_full` 明显超过所有 landmark-space smoothing baseline
-4. 因此当前方法的优势不能简单归因于时间平滑
+1. 普通 smoothing / filtering 在坐标空间中确实很有效，尤其 `Kalman` 是当前最强的 landmark-space smoothing baseline
+2. 如果只看 velocity / acceleration 一类的平滑度指标，传统滤波器会比 `optimized_full` 更平
+3. 但分类表现最好的并不是最平滑的 landmark-space baseline，而是 `optimized_action`
+4. 因此本文方法的优势不能写成“最强 landmark smoother”，而应该写成“更适合识别的结构化表示”
 
-也就是说，目前最合理的论文表述是：
+也就是说，当前更准确的论文表述是：
 
-**Conventional landmark-space smoothing provides only modest gains over raw MediaPipe landmarks, whereas the MuJoCo-constrained refined landmark reconstruction achieves substantially stronger downstream recognition performance.**
+**Although conventional smoothing reduces landmark-space jitter more aggressively than the reconstructed MuJoCo output, the best downstream recognition result is obtained by the optimized actuator representation rather than by the smoothest landmark-space baseline.**
+
+或者更完整地写成：
+
+**Ordinary coordinate-space smoothing and structured actuator-space refinement solve related but different problems: the former directly minimizes landmark variation, whereas the latter aims to preserve a temporally stable, embodiment-consistent, and discriminative latent hand representation.**
 
 ### 最关键的逻辑结论
 
@@ -405,7 +411,7 @@ smoothing / filtering 主要回答：
 
 这张表的目的：
 
-**证明当前方法即使回到 landmark space，也明显优于传统 smoothing/filtering。**
+**证明传统 smoothing 在 landmark space 中确实非常有效，但“最平滑的坐标序列”并不等于“最适合 few-shot gesture recognition 的表示”。**
 
 #### Table B: Representation comparison for downstream recognition
 

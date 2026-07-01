@@ -1,0 +1,3 @@
+dataset,feature_set,num_sequences,num_frames,velocity_mean,velocity_std,velocity_rms_mean,velocity_rms_std,acceleration_mean,acceleration_std,acceleration_rms_mean,acceleration_rms_std
+C:\D\projects\Orca robot hand\orca sim\orca_sim\gesture_sequence_dataset_chinese_dance_6class_smoothing.csv,corrected,56,7109,0.560063,0.134919,0.790321,0.185062,0.868712,0.216727,1.173957,0.281517
+C:\D\projects\Orca robot hand\orca sim\orca_sim\gesture_sequence_dataset_chinese_dance_6class_smoothing.csv,optimized_action,56,7109,0.296398,0.071852,0.384932,0.092382,0.319846,0.079115,0.422330,0.098374

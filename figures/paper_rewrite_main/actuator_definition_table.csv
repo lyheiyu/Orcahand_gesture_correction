@@ -1,0 +1,18 @@
+actuator,joint,role,ctrl_min_rad,ctrl_max_rad
+right_wrist_actuator,right_wrist,wrist flexion/extension,-1.134464,0.610865
+right_p-abd_actuator,right_p-abd,pinky abduction/adduction,-0.523599,0.523599
+right_p-mcp_actuator,right_p-mcp,pinky MCP flexion,-0.436332,1.745329
+right_p-pip_actuator,right_p-pip,pinky PIP flexion,-0.261799,1.867502
+right_r-abd_actuator,right_r-abd,ring abduction/adduction,-0.471239,0.471239
+right_r-mcp_actuator,right_r-mcp,ring MCP flexion,-0.436332,1.745329
+right_r-pip_actuator,right_r-pip,ring PIP flexion,-0.261799,1.867502
+right_m-abd_actuator,right_m-abd,middle abduction/adduction,-0.471239,0.471239
+right_m-mcp_actuator,right_m-mcp,middle MCP flexion,-0.436332,1.745329
+right_m-pip_actuator,right_m-pip,middle PIP flexion,-0.261799,1.867502
+right_i-abd_actuator,right_i-abd,index abduction/adduction,-0.436332,0.523599
+right_i-mcp_actuator,right_i-mcp,index MCP flexion,-0.436332,1.745329
+right_i-pip_actuator,right_i-pip,index PIP flexion,-0.261799,1.867502
+right_t-cmc_actuator,right_t-cmc,thumb CMC opposition,-0.785398,0.575959
+right_t-abd_actuator,right_t-abd,thumb abduction,-0.314159,0.959931
+right_t-mcp_actuator,right_t-mcp,thumb MCP flexion,-0.436332,1.745329
+right_t-pip_actuator,right_t-pip,thumb PIP flexion,-0.261799,1.867502

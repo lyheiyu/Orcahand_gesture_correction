@@ -1,0 +1,7 @@
+dataset,feature_set,num_sequences,num_frames,velocity_mean,velocity_std,velocity_rms_mean,velocity_rms_std,acceleration_mean,acceleration_std,acceleration_rms_mean,acceleration_rms_std
+C:\D\projects\Orca robot hand\orca sim\orca_sim\gesture_sequence_dataset_chinese_dance_6class_smoothing.csv,raw,56,7109,0.547557,0.122418,0.768490,0.225795,0.774429,0.171823,1.037227,0.295413
+C:\D\projects\Orca robot hand\orca sim\orca_sim\gesture_sequence_dataset_chinese_dance_6class_smoothing.csv,moving_average_raw,56,7109,0.329871,0.068139,0.390817,0.111113,0.164800,0.032042,0.210483,0.057452
+C:\D\projects\Orca robot hand\orca sim\orca_sim\gesture_sequence_dataset_chinese_dance_6class_smoothing.csv,savgol_raw,56,7109,0.394797,0.080338,0.473692,0.132340,0.246436,0.056016,0.300609,0.085184
+C:\D\projects\Orca robot hand\orca sim\orca_sim\gesture_sequence_dataset_chinese_dance_6class_smoothing.csv,oneeuro_raw,56,7109,0.305379,0.077913,0.382830,0.143104,0.189238,0.051919,0.289749,0.156455
+C:\D\projects\Orca robot hand\orca sim\orca_sim\gesture_sequence_dataset_chinese_dance_6class_smoothing.csv,kalman_raw,56,7109,0.176912,0.096392,0.211160,0.175642,0.074228,0.097873,0.116100,0.170994
+C:\D\projects\Orca robot hand\orca sim\orca_sim\gesture_sequence_dataset_chinese_dance_6class_smoothing.csv,optimized_full,56,7109,0.305236,0.066527,0.417025,0.093572,0.311969,0.076682,0.422107,0.112753
