@@ -47,6 +47,7 @@ def main() -> None:
     print(f"optimizer_method={result.method}")
     print(f"success={result.success}")
     print(f"iterations={result.iterations}")
+    print(f"optimizer_solve_time_ms={result.solve_time_ms:.3f}")
     print(f"loss={result.loss:.6f}")
     print("loss_terms=")
     for name, value in result.loss_terms.items():

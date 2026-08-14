@@ -1,0 +1,2 @@
+sequence_id,actuator_index,actuator_role,selection_score,num_frames,corrected_velocity_mean,optimized_velocity_mean,corrected_velocity_max,optimized_velocity_max
+8965bab92aa4,3,pinky PIP flexion,3.1656726598739624,113,0.5809083045641181,0.31741274782498213,2.9053946439967646,1.1384872385619507

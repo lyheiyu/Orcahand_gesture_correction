@@ -1,0 +1,10 @@
+{
+  "frames": 300,
+  "solve_time_mean_ms": 29.925009333819617,
+  "solve_time_median_ms": 29.214649999630637,
+  "solve_time_p95_ms": 37.27936500290525,
+  "iterations_mean": 5.87,
+  "iterations_median": 6.0,
+  "success_rate": 1.0,
+  "finite_rate": 1.0
+}

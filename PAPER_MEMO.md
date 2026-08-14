@@ -1,5 +1,29 @@
 # 论文备忘录
 
+## 2026-08-12 Palm-normal consistency fix and updated results
+
+代码审计确认目标 palm normal 与 MuJoCo 预测 palm normal 曾使用相反的叉乘顺序。现在二者统一为 `cross(palm_forward, palm_across)`，没有调整任何 loss 权重。MuJoCo 合成姿态回归测试中，目标与预测单位法向量点积由约 `-0.9986` 变为 `+0.9986`，对应的 perfect-pose palm loss 由约 `3.9972` 降为 `0.0028`。完整诊断见 `diagnostics/ORCA_PALM_FIX_COMPARISON.md`。
+
+修复后重新生成了六类数据的 `optimized_action` 与 `optimized_full`，并在相同的 20 组 sequence-level split 上重跑分类。最新主结果为：
+
+- SVM + Optimized Action: `accuracy = 0.9667 +/- 0.0408`, `macro-F1 = 0.9475 +/- 0.0745`, `kappa = 0.9585 +/- 0.0509`
+- KNN + Optimized Action: `accuracy = 0.9250 +/- 0.0583`, `macro-F1 = 0.9306 +/- 0.0576`, `kappa = 0.9084 +/- 0.0708`
+- RandomForest + Optimized Action: `accuracy = 0.9292 +/- 0.0605`, `macro-F1 = 0.9081 +/- 0.0876`, `kappa = 0.9129 +/- 0.0742`
+- MLP + Optimized Action: `accuracy = 0.9125 +/- 0.0617`, `macro-F1 = 0.9050 +/- 0.0760`, `kappa = 0.8927 +/- 0.0752`
+
+新的安全结论是：修复后的 Optimized Action 仍是四种分类器中准确率最高的 structured representation，并在 SVM 下取得当前最佳总体准确率。SVM 与 KNN 得到改善，RandomForest 基本不变，MLP 略有下降。Optimized Full 的分类结果与 landmark-space jitter 并未全面改善，因此不能声称法向修复使所有输出都更平滑；更准确的表述是，它修复了目标函数的几何一致性、改善了合成恢复，并强化了主要 latent actuator representation 的证据。
+
+### 新增的 paired evidence
+
+使用保存的同一组 20 次 train/test sequence split 对不同表示进行逐次配对后，Optimized Action 相对 Raw 的平均 accuracy 提升为：SVM `+0.1417`、KNN `+0.1458`、RandomForest `+0.0583`、MLP `+0.0917`，四项探索性 Wilcoxon 检验均为 `p < 0.01`。相对 Corrected 的平均提升较小：SVM `+0.0208`、KNN `+0.0250`、RandomForest `+0.0208`、MLP `+0.0167`；只有 KNN 达到 `p < 0.05`，SVM 为 `p = 0.0588`，RF 与 MLP 也未达到 0.05。
+
+因此现在应把论文结论分成两层：
+
+- 强结论：结构化 actuator representation 相对 raw MediaPipe landmarks 的提升跨分类器稳定存在。
+- 初步结论：MuJoCo temporal optimization 在 Corrected 基础上进一步提高平均准确率，但当前数据量不足以证明这种增益在所有分类器上均显著。
+
+由于 repeated holdout 的测试集合相互重叠，这些 Wilcoxon 数值只能作为 exploratory paired evidence，不能当作完全独立样本上的最终显著性证明。下一步增加参与者和独立 session，比继续增加同一数据上的随机 repeats 更重要。
+
 ## 暂定题目
 
 **Robust Hand Landmark Correction via MuJoCo-Constrained Temporal Optimization**

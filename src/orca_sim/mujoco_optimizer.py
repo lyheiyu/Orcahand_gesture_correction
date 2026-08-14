@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from time import perf_counter
 
 import mujoco
 import numpy as np
@@ -47,6 +48,7 @@ class OptimizationResult:
     loss: float
     success: bool
     iterations: int
+    solve_time_ms: float
     method: str
     loss_terms: dict[str, float]
     optimized_sparse_points: np.ndarray
@@ -164,6 +166,7 @@ class MujocoHandPoseOptimizer:
 
         if SCIPY_AVAILABLE:
             bounds = list(zip(self.env.action_low.astype(float), self.env.action_high.astype(float)))
+            solve_start = perf_counter()
             result = minimize(
                 objective,
                 x0=initial_action,
@@ -171,24 +174,29 @@ class MujocoHandPoseOptimizer:
                 bounds=bounds,
                 options={"maxiter": max_iterations},
             )
+            solve_time_ms = (perf_counter() - solve_start) * 1000.0
             action = np.clip(np.asarray(result.x, dtype=np.float64), self.env.action_low, self.env.action_high)
             return OptimizationResult(
                 action=action.astype(np.float32),
                 loss=float(result.fun),
                 success=bool(result.success),
                 iterations=int(getattr(result, "nit", 0)),
+                solve_time_ms=float(solve_time_ms),
                 method="scipy_lbfgsb",
                 loss_terms=loss_terms(action),
                 optimized_sparse_points=self.sparse_landmarks_from_action(action),
                 optimized_full_points=self.full_landmarks_from_action(action),
             )
 
+        solve_start = perf_counter()
         action, loss, iterations = self._coordinate_descent(objective, initial_action, max_iterations)
+        solve_time_ms = (perf_counter() - solve_start) * 1000.0
         return OptimizationResult(
             action=action.astype(np.float32),
             loss=loss,
             success=True,
             iterations=iterations,
+            solve_time_ms=float(solve_time_ms),
             method="coordinate_descent",
             loss_terms=loss_terms(action),
             optimized_sparse_points=self.sparse_landmarks_from_action(action),
@@ -358,7 +366,8 @@ class MujocoHandPoseOptimizer:
 
         palm_across = normalized["index_mcp"] - normalized["pinky_mcp"]
         palm_forward = normalized["middle_mcp"] - normalized["wrist"]
-        palm_normal = np.cross(palm_across, palm_forward)
+        # Match the target palm-normal convention used in gesture_features.palm_normal_vector().
+        palm_normal = np.cross(palm_forward, palm_across)
         palm_norm = np.linalg.norm(palm_normal)
         if palm_norm > 1e-8:
             palm_normal = palm_normal / palm_norm

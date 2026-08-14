@@ -132,7 +132,9 @@ def _plot_confusion_matrix(
     normalized = np.divide(cm, row_sums, out=np.zeros_like(cm, dtype=np.float64), where=row_sums != 0)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    fig, ax = plt.subplots(figsize=(6.4, 5.4), dpi=180)
+    longest_label = max((len(str(label)) for label in labels), default=0)
+    figure_width = max(6.4, 1.45 * len(labels), 0.42 * longest_label)
+    fig, ax = plt.subplots(figsize=(figure_width, 6.2), dpi=180)
     image = ax.imshow(normalized, interpolation="nearest", cmap="Blues", vmin=0.0, vmax=1.0)
     fig.colorbar(image, ax=ax, fraction=0.046, pad=0.04)
 
@@ -141,7 +143,7 @@ def _plot_confusion_matrix(
     ax.set_ylabel("True label")
     ax.set_xticks(np.arange(len(labels)))
     ax.set_yticks(np.arange(len(labels)))
-    ax.set_xticklabels(labels)
+    ax.set_xticklabels(labels, rotation=32, ha="right", rotation_mode="anchor")
     ax.set_yticklabels(labels)
 
     threshold = 0.5

@@ -2,5 +2,5 @@ classifier,representation,accuracy_mean,macro_f1_mean,cohen_kappa_mean,role
 RandomForest,Raw,0.8708,0.8588,0.8413,raw baseline
 RandomForest,Raw PCA-17,0.9458,0.9528,0.9336,dimension-matched PCA baseline
 RandomForest,Corrected,0.9083,0.8850,0.8874,heuristic actuator-space projection
-RandomForest,Optimized Action,0.9292,0.9168,0.9130,structured actuator-space refinement
-SVM,Optimized Action,0.9542,0.9378,0.9429,best structured result
+RandomForest,Optimized Action,0.9292,0.9081,0.9129,structured actuator-space refinement
+SVM,Optimized Action,0.9667,0.9475,0.9585,best structured result

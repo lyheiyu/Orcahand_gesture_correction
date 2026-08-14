@@ -24,7 +24,7 @@
 \maketitle
 
 \begin{abstract}
-Vision-based hand landmark estimators such as MediaPipe often suffer from frame-level jitter, drift, and transient outliers under challenging viewpoints, rapid articulation, and self-occlusion. We propose a MuJoCo-constrained temporal optimization framework that refines noisy hand landmarks in the actuator space of an articulated ORCA hand model, producing kinematically plausible and temporally consistent latent hand trajectories. Unlike conventional coordinate-space smoothing, the refinement process is performed in a structured actuator space and constrained by MuJoCo forward kinematics, allowing the representation to respect embodiment priors rather than merely averaging landmark coordinates over time. The framework combines a rule-based actuator projection, robust landmark fitting, palm-normal alignment, prior regularization, and first- and second-order temporal consistency terms. On a six-class Chinese dance gesture subset, the refined actuator representation achieves strong few-shot sequence classification performance across lightweight classifiers, with SVM reaching 0.9542 accuracy. Conventional filters, particularly Kalman filtering, reduce landmark-space jitter more aggressively, but the refined actuator representation achieves the strongest RandomForest recognition performance among the smoothing and structured baselines. At the same time, PCA-reduced raw landmarks remain highly competitive, reaching 0.9458 accuracy under RandomForest. These results suggest a nuanced conclusion: structured actuator-space refinement provides a robust and interpretable representation for fine-grained hand gestures, while generic low-dimensional geometric compression can preserve complementary discriminative cues.
+Vision-based hand landmark estimators such as MediaPipe can exhibit frame-level jitter, drift, and transient outliers under challenging viewpoints, rapid articulation, and self-occlusion. We propose a fixed-weight, causal MuJoCo-constrained optimization framework that refines these observations in the 17-dimensional actuator space of an articulated ORCA hand. Unlike coordinate-space smoothing, the method combines an embodiment-aware initialization with MuJoCo forward kinematics, actuator bounds, component-wise Huber fitting, palm-normal alignment, and first- and second-order temporal regularization. On the current six-class Chinese dance gesture subset, Optimized Action reaches $0.9667\pm0.0408$ accuracy with SVM and improves over raw landmarks under all four evaluated lightweight classifiers. Dimension-matched PCA-17 remains competitive and is strongest under RandomForest, while conventional Kalman filtering gives the lowest landmark-space jitter. Loss ablation further shows that temporal terms substantially reduce actuator velocity and acceleration but do not independently guarantee higher classification accuracy, revealing a stability--discrimination trade-off. The L-BFGS-B solver requires 29.9 ms per frame on average over a 300-frame benchmark, with a 37.3 ms 95th percentile. These results support actuator-space refinement as an interpretable and competitive representation, while the present sequence-only split and limited dataset size require cautious generalization.
 \end{abstract}
 
 
@@ -59,9 +59,9 @@ A central part of the argument is to distinguish the proposed method from simple
 The main contributions of this work are:
 \begin{itemize}[leftmargin=*]
     \item We introduce a structured landmark-refinement pipeline that maps noisy MediaPipe observations into the actuator space of an articulated ORCA hand model.
-    \item We formulate MuJoCo-constrained temporal optimization with robust landmark fitting, prior regularization, actuator-boundary constraints, and acceleration-aware temporal consistency.
-    \item We evaluate the resulting representation on a six-class Chinese dance gesture subset and show that the optimized actuator trajectory consistently improves over raw landmarks and heuristic actuator projection across lightweight classifiers.
-    \item We compare against PCA-reduced raw landmarks and show that the final interpretation is classifier dependent: optimized actuator features provide the strongest structured representation, while PCA remains a strong generic low-dimensional baseline under RandomForest.
+    \item We formulate fixed-weight causal MuJoCo optimization with robust landmark fitting, explicit actuator priors, box constraints, and acceleration-aware temporal consistency.
+    \item We evaluate raw, smoothed, PCA-reduced, heuristic actuator, optimized actuator, and reconstructed landmark representations under identical repeated few-shot sequence splits and four lightweight classifiers.
+    \item We provide loss ablation, implementation regression tests, and runtime diagnostics that separate temporal stability from downstream recognition performance and expose the limits of the current prototype dataset.
 \end{itemize}
 
 \section{Related Work}
@@ -105,11 +105,15 @@ The Optimized Action representation solves
 + \lambda_d \mathcal{L}_{\text{default}}
 + \lambda_b \mathcal{L}_{\text{boundary}}.
 \]
-The main fitting and regularization terms are
+The observation term follows the implementation exactly. Let $\mathcal{C}$ be the eight correspondences
+\[
+\mathcal{C}=\{\text{wrist, thumb tip, index MCP/tip, middle MCP/tip, pinky MCP/tip}\}.
+\]
+For the three coordinate residuals $r_{t,i,k}=h_i(\mathbf q_t)_k-y_{t,i,k}$, the loss is component-wise rather than a Huber penalty on the vector norm:
 \[
 \mathcal{L}_{\text{huber}}
 =
-\sum_i \rho_\delta \!\left(\left\| h_i(\mathbf{q}_t) - \mathbf{y}_{t,i} \right\|_2\right),
+\sum_{i\in\mathcal C}\sum_{k=1}^{3}\rho_\delta(r_{t,i,k}),
 \qquad
 \mathcal{L}_{\text{normal}}
 =
@@ -141,7 +145,27 @@ which behaves like an $L_2$ loss for small residuals and like an $L_1$-style pen
 \]
 which penalizes abrupt second-order changes in the actuator trajectory.
 
-The remaining regularizers keep the solution inside a stable actuator regime. $\mathcal{L}_{\text{default}}$ discourages unnecessary deviation from a neutral hand configuration when the observations are ambiguous, and $\mathcal{L}_{\text{boundary}}$ penalizes actuator values near or outside feasible limits. The resulting representation is best interpreted as a robust temporally regularized latent-state estimator rather than a simple smoother.
+Let $\mathbf q^{0}$ denote the neutral actuator state read from the MuJoCo model. The default-pose term is
+\[
+\mathcal{L}_{\text{default}}=\|\mathbf q_t-\mathbf q^{0}\|_2^2.
+\]
+For actuator $j$ with box limits $q_j^{\min}$ and $q_j^{\max}$, define
+\[
+u_{t,j}=\frac{q_{t,j}-q_j^{\min}}{\max(q_j^{\max}-q_j^{\min},10^{-6})}.
+\]
+The soft boundary term discourages solutions from remaining in the outer 10\% of an actuator range:
+\[
+\mathcal{L}_{\text{boundary}}
+=\sum_j\left[\max(0,0.1-u_{t,j})^2+\max(0,u_{t,j}-0.9)^2\right].
+\]
+This soft penalty complements the hard L-BFGS-B box constraints; it does not replace them. At the first frame of each sequence both temporal terms are zero. At the second frame only the first-order temporal term is active. Sequence history is reset before processing a new sequence.
+
+Before fitting, both MediaPipe and MuJoCo points are translated to the wrist origin and divided by
+\[
+s_t=\max\!\left(\|\mathbf y_{t,\mathrm{indexMCP}}-\mathbf y_{t,\mathrm{pinkyMCP}}\|_2,
+\|\mathbf y_{t,\mathrm{middleMCP}}-\mathbf y_{t,\mathrm{wrist}}\|_2,10^{-6}\right).
+\]
+The current implementation preserves the source coordinate axes rather than rotating every observation into a palm-local frame. The experiments use right-hand observations and the right-hand ORCA model. Consequently, the method should be interpreted as model-consistent refinement under the acquisition convention used here, not as a general left/right canonicalization procedure.
 
 For visualization and geometric evaluation, we further reconstruct a landmark representation by projecting the optimized actuator state back through MuJoCo:
 \[
@@ -196,6 +220,31 @@ Sparse fitting points & 8 landmark correspondences \\
 \end{tabular}
 \end{table}
 
+\subsection{Implementation Consistency Checks}
+Before regenerating the reported representations, we verified the optimizer against MuJoCo-generated poses. In particular, the target and forward-model palm normals use the same cross-product convention. For a generated pose, their unit-normal dot product is 0.9986 and the corresponding unweighted palm-normal loss is 0.0028. Regression tests further confirm that sequence history is reset at sequence boundaries, optimized actuator values remain within their allowed ranges, and the checked optimization outputs contain no NaN or infinite values. These checks are important because an inconsistent normal convention can create a systematic conflict between the palm-alignment and landmark-fitting terms even when the observation is generated by the same forward model.
+
+\subsection{Runtime Protocol}
+Runtime was measured for the complete fixed-weight L-BFGS-B actuator optimization on 300 consecutive frames after one warm-up solve. The benchmark used an Intel Core i9-14900K CPU, Python 3.11.15, MuJoCo 3.6.0, SciPy 1.17.1, and NumPy 2.4.4. It excludes MediaPipe inference, camera capture, rendering, and downstream classification. Table~\ref{tab:runtime} reports solver-only latency. Since the 95th percentile exceeds the 33.3 ms budget associated with 30 FPS, we describe the implementation as causal frame-wise processing rather than making a strict real-time claim.
+
+\begin{table}[t]
+\centering
+\caption{Solver runtime over 300 frames on CPU.}
+\label{tab:runtime}
+\footnotesize
+\begin{tabular}{@{}lc@{}}
+\toprule
+Measure & Value \\
+\midrule
+Mean solve time & 29.93 ms/frame \\
+Median solve time & 29.21 ms/frame \\
+95th-percentile solve time & 37.28 ms/frame \\
+Mean L-BFGS-B iterations & 5.87 \\
+Optimization success rate & 100\% \\
+Finite-output rate & 100\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Sequence-level Statistical Aggregation for Downstream Evaluation}
 The main method operates at the frame level. For downstream few-shot classification, we aggregate frame-wise features across a sequence using summary statistics such as mean, standard deviation, maximum, and temporal difference descriptors. If a frame-level feature is $\mathbf{x}_t \in \mathbb{R}^{d}$, then for a sequence of length $T$ we compute
 \[
@@ -214,7 +263,7 @@ and concatenate them into
 \]
 This aggregation is an evaluation protocol rather than the correction method itself. Its purpose is to compare whether cleaner frame-level representations lead to better sequence-level classification under limited supervision.
 
-We intentionally adopt this lightweight statistical sequence encoding for two reasons. First, it keeps the downstream model simple enough that observed gains can be attributed primarily to representation quality rather than to a high-capacity temporal classifier. Second, in the current few-shot setting, a compact fixed-length descriptor offers a favorable bias--variance tradeoff and avoids over-interpreting noisy short training sequences. Stronger temporal baselines such as GRU and LSTM models remain important future comparisons, but they are not required for establishing the core contribution of this paper: frame-level landmark refinement in a structured actuator space.
+We intentionally adopt this lightweight statistical sequence encoding for two reasons. First, it keeps the downstream model simple enough that observed gains can be attributed primarily to representation quality rather than to a high-capacity temporal classifier. Second, in the current few-shot setting, a compact fixed-length descriptor offers a favorable bias--variance tradeoff and avoids over-interpreting noisy short training sequences. Stronger temporal baselines such as GRU and LSTM models remain important future comparisons, but they are not required for evaluating the present contribution: causal latent-state refinement in a structured actuator space.
 
 \begin{table}[t]
 \centering
@@ -235,11 +284,18 @@ Optimized Full & 63 & forward reconstruction & indirect & inherited & structure-
 \end{tabular}
 \end{table}
 
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{paper_rewrite_main/method_pipeline.png}
+\caption{Overview of the proposed refinement and evaluation pipeline. MediaPipe landmarks are first mapped to a 17-dimensional embodiment-aware initialization. Causal optimization then combines MuJoCo forward kinematics, actuator bounds, robust observation fitting, and temporal regularization. The resulting Optimized Action is used directly for recognition or reprojected as Optimized Full for landmark-space analysis.}
+\label{fig:method_pipeline}
+\end{figure}
+
 \section{Experiments and Results}
 \subsection{Dataset and Gesture Classes}
 We evaluate the method on the sequence dataset \url{gesture_sequence_dataset_chinese_dance_6class.csv}, a six-class Chinese dance gesture subset filtered from the broader collection. The six classes are \texttt{orchid\_palm}, \texttt{orchid\_finger}, \texttt{flower\_pinch}, \texttt{prayer\_beads}, \texttt{three\_finger\_bent}, and \texttt{deer\_horn}. This subset is the primary task because it reflects the intended fine-grained application domain of the work.
 
-Although the present subset is modest in scale, its collection protocol follows common practice in sequence-based gesture and skeleton-action benchmarks. Each sample is treated as one continuous labeled gesture clip rather than as a bag of independent frames; label definitions are kept fixed across recording sessions; and train/test splits are grouped by \texttt{sequence\_id} to avoid frame-level leakage. During recording, we intentionally allow mild variation in viewpoint, wrist rotation, and execution speed while avoiding uncontrolled scene changes, so that the benchmark remains small but behaviorally meaningful. This design is consistent with the broader dataset-construction logic used in NTU RGB+D, which emphasizes explicit split policies and subject/view variation \cite{shahroudy2016ntu}, and with hand-gesture benchmarks such as SHREC 2021 and DriverMHG, which treat gestures as temporally bounded sequence events rather than isolated still images \cite{caputo2021shrec,kopuklu2020drivermhg}. The motivation for increasing subject diversity is also consistent with recent gesture-dataset work such as HaGRID, which highlights the value of cross-subject and cross-scene variation for reducing dataset bias \cite{kapitanov2022hagrid}. Accordingly, the current dataset should be interpreted as a controlled prototype benchmark for few-shot representation evaluation rather than as a large-scale general-purpose gesture corpus.
+Each sample is treated as one continuous labeled gesture clip rather than as a collection of independent frames. All frames belonging to a sequence remain together during splitting, preventing direct frame-level leakage between training and test sets. However, the current CSV does not contain participant or recording-session identifiers. The reported protocol is therefore sequence-disjoint but cannot be verified as subject-independent or session-independent. In contrast to larger gesture and skeleton benchmarks that define explicit cross-subject or cross-view protocols \cite{shahroudy2016ntu,caputo2021shrec,kopuklu2020drivermhg,kapitanov2022hagrid}, the present subset should be interpreted as a controlled prototype benchmark for representation analysis rather than evidence of population-level generalization.
 
 The subset contains 56 gesture sequences and 7109 frames. The downstream evaluation follows a few-shot setting with three training sequences per class. Each experiment is repeated 20 times with different train/test splits. Because the current dataset is still moderately imbalanced across classes, we report multiple metrics beyond accuracy, including macro-F1 and Cohen's kappa. The class distribution is summarized in Table~\ref{tab:dataset_summary}.
 
@@ -286,7 +342,7 @@ We evaluate temporal smoothness separately in actuator space and landmark space.
 Representation & Velocity Mean & Velocity RMS & Acceleration Mean & Acceleration RMS \\
 \midrule
 Corrected & 0.5601 & 0.7903 & 0.8687 & 1.1740 \\
-Optimized Action & \textbf{0.2964} & \textbf{0.3849} & \textbf{0.3198} & \textbf{0.4223} \\
+Optimized Action & \textbf{0.3015} & \textbf{0.3898} & \textbf{0.3206} & \textbf{0.4225} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -305,7 +361,7 @@ Moving Average & 0.3299 & 0.3908 & 0.1648 & 0.2105 \\
 Savitzky--Golay & 0.3948 & 0.4737 & 0.2464 & 0.3006 \\
 One-Euro & 0.3054 & 0.3828 & 0.1892 & 0.2897 \\
 Kalman & \textbf{0.1769} & \textbf{0.2112} & \textbf{0.0742} & \textbf{0.1161} \\
-Optimized Full & 0.3052 & 0.4170 & 0.3120 & 0.4221 \\
+Optimized Full & 0.3418 & 0.4587 & 0.3199 & 0.4290 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -320,10 +376,17 @@ Optimized Full & 0.3052 & 0.4170 & 0.3120 & 0.4221 \\
 
 Within actuator space, Optimized Action achieves lower velocity and acceleration than the heuristic Corrected representation, indicating that robust fitting and acceleration regularization suppress transient drift more effectively in the latent state trajectory. Within landmark space, conventional filters such as Kalman filtering can reduce coordinate variation more aggressively than the reconstructed MuJoCo landmarks. This does not contradict the recognition results below; rather, it shows that coordinate smoothness and discriminative representation quality are related but distinct evaluation criteria.
 
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.94\linewidth]{paper_rewrite_main/trajectory_refinement_example_6class.png}
+\caption{Illustrative high-jitter sequence selected by the largest reduction in maximum second-order actuator change. The upper panel shows the pinky PIP trajectory before and after MuJoCo-constrained refinement; the lower panel shows the full actuator-space velocity norm. The example visualizes how isolated peaks are attenuated without forcing the trajectory to remain constant.}
+\label{fig:trajectory_example}
+\end{figure}
+
 \subsection{Sequence-level Few-shot Classification}
 To measure downstream utility, we aggregate frame-level features into sequence descriptors and train lightweight few-shot classifiers on top of each representation. The key question is whether a temporally stable actuator trajectory is more discriminative than raw landmark coordinates under limited training data. The representation comparisons are organized in two stages. First, we compare against simple filtering baselines to examine whether ordinary temporal smoothing is sufficient. Second, we compare against PCA-reduced baselines to examine whether the gains from actuator-space representations can be explained by generic dimensionality reduction.
 
-Table~\ref{tab:main_classifiers} reports the current six-class results across four lightweight classifiers. Across all classifiers, Optimized Action is the strongest structured representation. The best overall structured result is obtained by SVM with Optimized Action, reaching $0.9542 \pm 0.0415$ accuracy, $0.9378 \pm 0.0713$ macro-F1, and $0.9429 \pm 0.0516$ Cohen's kappa.
+Table~\ref{tab:main_classifiers} reports the current six-class results across four lightweight classifiers. Across all classifiers, Optimized Action is the strongest structured representation by accuracy. The best overall structured result is obtained by SVM with Optimized Action, reaching $0.9667 \pm 0.0408$ accuracy, $0.9475 \pm 0.0745$ macro-F1, and $0.9585 \pm 0.0509$ Cohen's kappa.
 
 \begin{table}[!t]
 \centering
@@ -337,29 +400,59 @@ Classifier & Representation & Accuracy & Macro-F1 & Kappa \\
 \multirow{4}{*}{SVM}
 & Raw & $0.8250 \pm 0.0909$ & $0.7985 \pm 0.1187$ & $0.7841 \pm 0.1115$ \\
 & Corrected & $0.9458 \pm 0.0477$ & $0.9262 \pm 0.0759$ & $0.9330 \pm 0.0586$ \\
-& Optimized Action & $\mathbf{0.9542 \pm 0.0415}$ & $\mathbf{0.9378 \pm 0.0713}$ & $\mathbf{0.9429 \pm 0.0516}$ \\
-& Optimized Full & $0.7958 \pm 0.1163$ & $0.7334 \pm 0.1534$ & $0.7468 \pm 0.1437$ \\
+& Optimized Action & $\mathbf{0.9667 \pm 0.0408}$ & $\mathbf{0.9475 \pm 0.0745}$ & $\mathbf{0.9585 \pm 0.0509}$ \\
+& Optimized Full & $0.7917 \pm 0.1133$ & $0.7350 \pm 0.1327$ & $0.7430 \pm 0.1371$ \\
 \midrule
 \multirow{4}{*}{KNN}
 & Raw & $0.7792 \pm 0.1325$ & $0.7394 \pm 0.1476$ & $0.7319 \pm 0.1577$ \\
 & Corrected & $0.9000 \pm 0.0677$ & $0.9010 \pm 0.0747$ & $0.8781 \pm 0.0819$ \\
-& Optimized Action & $\mathbf{0.9083 \pm 0.0786}$ & $\mathbf{0.9048 \pm 0.0897}$ & $\mathbf{0.8881 \pm 0.0955}$ \\
-& Optimized Full & $0.7542 \pm 0.1330$ & $0.7028 \pm 0.1480$ & $0.6998 \pm 0.1601$ \\
+& Optimized Action & $\mathbf{0.9250 \pm 0.0583}$ & $\mathbf{0.9306 \pm 0.0576}$ & $\mathbf{0.9084 \pm 0.0708}$ \\
+& Optimized Full & $0.7500 \pm 0.1236$ & $0.7009 \pm 0.1357$ & $0.6950 \pm 0.1464$ \\
 \midrule
 \multirow{4}{*}{RandomForest}
 & Raw & $0.8708 \pm 0.0617$ & $0.8588 \pm 0.0826$ & $0.8413 \pm 0.0750$ \\
 & Corrected & $0.9083 \pm 0.0741$ & $0.8850 \pm 0.0982$ & $0.8874 \pm 0.0907$ \\
-& Optimized Action & $\mathbf{0.9292 \pm 0.0660}$ & $\mathbf{0.9168 \pm 0.0866}$ & $\mathbf{0.9130 \pm 0.0810}$ \\
-& Optimized Full & $0.8750 \pm 0.0968$ & $0.8676 \pm 0.1218$ & $0.8457 \pm 0.1188$ \\
+& Optimized Action & $\mathbf{0.9292 \pm 0.0605}$ & $\mathbf{0.9081 \pm 0.0876}$ & $\mathbf{0.9129 \pm 0.0742}$ \\
+& Optimized Full & $0.8500 \pm 0.0898$ & $0.7898 \pm 0.1324$ & $0.8128 \pm 0.1117$ \\
 \midrule
 \multirow{4}{*}{MLP}
 & Raw & $0.8208 \pm 0.1030$ & $0.7923 \pm 0.1273$ & $0.7820 \pm 0.1220$ \\
 & Corrected & $0.8958 \pm 0.0447$ & $0.8781 \pm 0.0755$ & $0.8720 \pm 0.0549$ \\
-& Optimized Action & $\mathbf{0.9167 \pm 0.0646}$ & $\mathbf{0.9062 \pm 0.0851}$ & $\mathbf{0.8977 \pm 0.0791}$ \\
-& Optimized Full & $0.7708 \pm 0.1288$ & $0.7141 \pm 0.1555$ & $0.7162 \pm 0.1585$ \\
+& Optimized Action & $\mathbf{0.9125 \pm 0.0617}$ & $\mathbf{0.9050 \pm 0.0760}$ & $\mathbf{0.8927 \pm 0.0752}$ \\
+& Optimized Full & $0.7833 \pm 0.1161$ & $0.7276 \pm 0.1342$ & $0.7331 \pm 0.1418$ \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+Because all representations use identical train/test sequence IDs in each repeat, their results can also be compared as paired observations. Figure~\ref{fig:paired_accuracy} shows the repeat-wise accuracy difference between Optimized Action and the two actuator-pipeline baselines. Relative to Raw, the mean gains are 0.1417, 0.1458, 0.0583, and 0.0917 for SVM, KNN, RandomForest, and MLP, respectively; all four exploratory two-sided Wilcoxon signed-rank comparisons give $p<0.01$. Relative to Corrected, the mean gains are smaller. KNN reaches $p=0.0304$, whereas SVM ($p=0.0588$), RandomForest ($p=0.1401$), and MLP ($p=0.1254$) do not reach the conventional 0.05 threshold on the current 20 repeats. Thus, the evidence for improvement over raw landmarks is strong, while the incremental benefit over the heuristic actuator projection remains preliminary. Because repeated holdout splits overlap and are not statistically independent, these $p$-values are treated as exploratory rather than definitive population-level significance tests.
+
+\begin{table}[!t]
+\centering
+\caption{Exploratory paired accuracy comparison for Optimized Action using identical repeated splits. Positive/equal/negative counts indicate the number of repeats in which Optimized Action performs better than, equal to, or worse than the baseline. The Wilcoxon values should be interpreted with caution because repeated holdout splits overlap.}
+\label{tab:paired_accuracy}
+\footnotesize
+\begin{tabular}{@{}llcccc@{}}
+\toprule
+Classifier & Baseline & Mean $\Delta$ accuracy & Positive / Equal / Negative & Wilcoxon $p$ \\
+\midrule
+SVM & Raw & +0.1417 & 17 / 3 / 0 & 0.0003 \\
+SVM & Corrected & +0.0208 & 4 / 16 / 0 & 0.0588 \\
+KNN & Raw & +0.1458 & 16 / 3 / 1 & 0.0016 \\
+KNN & Corrected & +0.0250 & 7 / 12 / 1 & 0.0304 \\
+RandomForest & Raw & +0.0583 & 11 / 6 / 3 & 0.0097 \\
+RandomForest & Corrected & +0.0208 & 7 / 11 / 2 & 0.1401 \\
+MLP & Raw & +0.0917 & 15 / 2 / 3 & 0.0055 \\
+MLP & Corrected & +0.0167 & 8 / 8 / 4 & 0.1254 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.96\linewidth]{paper_rewrite_main/paired_accuracy_improvement_6class.png}
+\caption{Paired accuracy differences across the same 20 few-shot sequence splits. Values above zero favor Optimized Action. Improvements over Raw are consistent across classifiers, whereas the smaller gains over Corrected reveal the remaining uncertainty associated with the current dataset size.}
+\label{fig:paired_accuracy}
+\end{figure}
 
 \subsection{Comparison with Conventional Smoothing Baselines}
 To determine whether the classification gains can be explained by ordinary coordinate-space denoising, we compare raw landmarks, four conventional temporal filters, and the proposed structured representations using the same RandomForest few-shot protocol. Each result is reported as mean $\pm$ standard deviation over 20 repeated three-shot splits. The smoothing baselines are moving average, Savitzky--Golay, One-Euro, and Kalman filtering.
@@ -377,10 +470,10 @@ Raw & $0.8708 \pm 0.0617$ & $0.8588 \pm 0.0826$ & $0.8413 \pm 0.0750$ \\
 Moving Average & $0.8667 \pm 0.0890$ & $0.8488 \pm 0.1139$ & $0.8360 \pm 0.1089$ \\
 Savitzky--Golay & $0.8667 \pm 0.0808$ & $0.8494 \pm 0.1089$ & $0.8362 \pm 0.0984$ \\
 One-Euro & $0.8792 \pm 0.0853$ & $0.8646 \pm 0.1104$ & $0.8517 \pm 0.1038$ \\
-Kalman & $0.9125 \pm 0.0720$ & $0.9064 \pm 0.0854$ & $0.8919 \pm 0.0885$ \\
+Kalman & $0.9125 \pm 0.0720$ & $\mathbf{0.9064 \pm 0.0854}$ & $0.8919 \pm 0.0885$ \\
 Corrected & $0.9083 \pm 0.0741$ & $0.8850 \pm 0.0982$ & $0.8874 \pm 0.0907$ \\
-Optimized Action & $\mathbf{0.9292 \pm 0.0660}$ & $\mathbf{0.9168 \pm 0.0866}$ & $\mathbf{0.9130 \pm 0.0810}$ \\
-Optimized Full & $0.8750 \pm 0.0968$ & $0.8676 \pm 0.1218$ & $0.8457 \pm 0.1188$ \\
+Optimized Action & $\mathbf{0.9292 \pm 0.0605}$ & $0.9081 \pm 0.0876$ & $\mathbf{0.9129 \pm 0.0742}$ \\
+Optimized Full & $0.8500 \pm 0.0898$ & $0.7898 \pm 0.1324$ & $0.8128 \pm 0.1117$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -392,7 +485,7 @@ Optimized Full & $0.8750 \pm 0.0968$ & $0.8676 \pm 0.1218$ & $0.8457 \pm 0.1188$
 \label{fig:smoothing_baselines}
 \end{figure}
 
-The results show that conventional smoothing does not consistently translate into stronger recognition. Moving-average and Savitzky--Golay filtering slightly reduce mean accuracy relative to raw landmarks, and One-Euro filtering yields only a small improvement. Kalman filtering is the strongest smoothing baseline, but Optimized Action achieves the highest overall RandomForest performance. Read together with the landmark-space jitter analysis, this is an important result: coordinate-space filtering can smooth landmark trajectories more aggressively than the reconstructed MuJoCo landmarks, yet the smoothest landmark sequence is still not the best representation for recognition. Therefore, the benefit of the proposed representation cannot be attributed solely to coordinate-space smoothing. The findings support the distinction between producing a smooth landmark trajectory and preserving a structured, discriminative latent representation for few-shot gesture recognition.
+The results show that conventional smoothing does not consistently translate into stronger recognition. Moving-average and Savitzky--Golay filtering slightly reduce mean accuracy relative to raw landmarks, and One-Euro filtering yields only a small improvement. Kalman filtering is the strongest smoothing baseline and obtains a marginally higher macro-F1 than Optimized Action, whereas Optimized Action achieves the highest RandomForest accuracy and Cohen's kappa. Read together with the landmark-space jitter analysis, this is an important result: coordinate-space filtering can smooth landmark trajectories more aggressively than the reconstructed MuJoCo landmarks, yet the smoothest landmark sequence is not the most accurate representation for recognition. Therefore, the benefit of the proposed representation cannot be attributed solely to coordinate-space smoothing. The findings support the distinction between producing a smooth landmark trajectory and preserving a structured, discriminative latent representation for few-shot gesture recognition.
 
 \FloatBarrier
 \subsection{Classifier Comparison}
@@ -400,85 +493,139 @@ The classifier comparison suggests two complementary observations. First, repres
 
 \begin{figure}[!htbp]
 \centering
-\begin{tabular}{cc}
-\includegraphics[width=0.46\linewidth]{paper_rewrite_main/classification_svm.png} &
-\includegraphics[width=0.46\linewidth]{paper_rewrite_main/classification_rf.png} \\
-(a) SVM & (b) RandomForest \\
-\includegraphics[width=0.46\linewidth]{paper_rewrite_main/classification_knn.png} &
-\includegraphics[width=0.46\linewidth]{paper_rewrite_main/classification_mlp.png} \\
-(c) KNN & (d) MLP \\
-\end{tabular}
-\caption{Six-class classification comparison across raw landmarks and structured representations. Optimized Action is consistently the strongest structured feature set across the lightweight classifiers.}
+\includegraphics[width=\linewidth]{paper_rewrite_main/performance_heatmaps_6class.png}
+\caption{Mean accuracy, macro-F1, and Cohen's kappa across classifiers and representations. Optimized Action has the highest mean accuracy in every classifier column, whereas Optimized Full generally loses discriminative information after reconstruction into the higher-dimensional landmark space.}
 \label{fig:classifier_suite}
 \end{figure}
 
-Figure~\ref{fig:confusion} shows representative confusion matrices for the strongest classifier setting. The optimized actuator representation improves class separation relative to raw landmarks, supporting the claim that the refined latent trajectory provides more reliable sequence-level evidence for fine-grained gesture recognition.
+Figure~\ref{fig:confusion} separates the contributions of heuristic projection and MuJoCo optimization under the strongest classifier setting. Most of the gain over Raw is already obtained by entering the structured actuator space; the optimization stage further improves flower-pinch and orchid-finger recall while preserving perfect aggregate recall for orchid palm and three-finger bent. Deer horn remains the most difficult class and is primarily confused with prayer beads, indicating a class-specific limitation rather than uniform improvement.
 
 \begin{figure}[!t]
 \centering
-\begin{tabular}{cc}
-\includegraphics[width=0.47\linewidth]{paper_rewrite_main/cm_svm_raw.png} &
-\includegraphics[width=0.47\linewidth]{paper_rewrite_main/cm_svm_optimized_action.png} \\
-(a) SVM with raw landmarks & (b) SVM with optimized action \\
-\includegraphics[width=0.47\linewidth]{paper_rewrite_main/cm_mlp_raw.png} &
-\includegraphics[width=0.47\linewidth]{paper_rewrite_main/cm_mlp_optimized_action.png} \\
-(c) MLP with raw landmarks & (d) MLP with optimized action \\
-\end{tabular}
-\caption{Representative confusion matrices on the six-class subset. The optimized actuator representation yields clearer separation than raw landmarks under both SVM and MLP.}
+\includegraphics[width=\linewidth]{paper_rewrite_main/cm_svm_representation_stages_6class.png}
+\caption{Aggregate SVM confusion matrices across all 20 repeats for Raw, Corrected, and Optimized Action. This stage-wise comparison shows that actuator-space projection provides the largest improvement and that MuJoCo-constrained refinement adds smaller class-dependent gains.}
 \label{fig:confusion}
 \end{figure}
 
 \FloatBarrier
-\subsection{Ablation-oriented PCA Baseline Analysis}
-Because Optimized Action is a 17-dimensional actuator representation, one natural question is whether its advantage comes merely from dimensionality reduction. To test this, we compare against PCA-reduced raw landmarks in two complementary ways: a dimension-matched PCA baseline and the best validated PCA baseline selected through a PCA sweep \cite{jolliffe2002pca}. On the current six-class subset, the strongest reported PCA comparison is Raw PCA-17 under RandomForest, which reaches 0.9458 accuracy, 0.9528 macro-F1, and 0.9336 kappa. This result is important because it shows that generic low-dimensional compression remains a very strong baseline for fine-grained hand gesture recognition.
+\subsection{Loss Ablation}
+We evaluate five targeted variants without retuning the remaining weights: removal of palm-normal alignment, removal of acceleration regularization, removal of both temporal terms, and replacement of component-wise Huber fitting with squared $L_2$ residuals. Corrected is included as the no-optimization reference. All variants use the same observations and the same saved sequence splits as the full method.
 
 \begin{table}[!t]
 \centering
-\caption{Focused comparison between raw landmarks, PCA baselines, and structured ORCA/MuJoCo representations on the six-class subset. The first four rows are matched RandomForest comparisons. The final row reports the best structured result across classifiers and is not a matched-classifier RandomForest comparison.}
-\label{tab:pca_comparison}
-\small
-\begin{tabular}{@{}llccc@{}}
+\caption{Loss ablation in actuator space. Stability values are averaged over 56 sequences; classification values are mean $\pm$ standard deviation over the same 20 few-shot splits. Lower stability values indicate smoother trajectories.}
+\label{tab:loss_ablation}
+\scriptsize
+\begin{tabular}{@{}lcccc@{}}
 \toprule
-Classifier & Representation & Accuracy & Macro-F1 & Kappa \\
+Variant & Velocity mean & Acceleration mean & SVM accuracy & RF accuracy \\
 \midrule
-RandomForest & Raw & 0.8708 & 0.8588 & 0.8413 \\
-RandomForest & Raw PCA-17 & \textbf{0.9458} & \textbf{0.9528} & \textbf{0.9336} \\
-RandomForest & Corrected & 0.9083 & 0.8850 & 0.8874 \\
-RandomForest & Optimized Action & 0.9292 & 0.9168 & 0.9130 \\
-SVM & Best structured result across classifiers (Optimized Action) & \textbf{0.9542} & 0.9378 & \textbf{0.9429} \\
+Corrected only & 0.5601 & 0.8687 & $0.9458\pm0.0477$ & $0.9083\pm0.0741$ \\
+Full & 0.3015 & 0.3206 & $0.9667\pm0.0408$ & $0.9292\pm0.0605$ \\
+Without palm normal & 0.2931 & 0.3167 & $0.9458\pm0.0545$ & $0.9125\pm0.0617$ \\
+Without acceleration & 0.3254 & 0.4467 & $\mathbf{0.9708\pm0.0397}$ & $\mathbf{0.9375\pm0.0639}$ \\
+Without temporal terms & 0.3900 & 0.6008 & $0.9667\pm0.0408$ & $\mathbf{0.9375\pm0.0691}$ \\
+$L_2$ instead of Huber & \textbf{0.2765} & \textbf{0.3160} & $0.9458\pm0.0545$ & $0.9250\pm0.0520$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{figure}[!t]
 \centering
-\includegraphics[width=0.88\linewidth]{paper_rewrite_main/pca_comparison_6class.png}
-\caption{Focused PCA comparison on the six-class subset. The PCA baseline is highly competitive under RandomForest, while Optimized Action remains the strongest structured representation and gives the best overall accuracy under SVM.}
+\includegraphics[width=\linewidth]{paper_rewrite_main/loss_ablation_stability_tradeoff_6class.png}
+\caption{Loss ablation separates temporal stability from recognition performance. Temporal regularization markedly reduces actuator velocity and acceleration, but the smoothest or most strongly regularized trajectory is not necessarily the most discriminative under the current classifier protocol.}
+\label{fig:loss_ablation}
+\end{figure}
+
+Removing acceleration increases mean second-order variation from 0.3206 to 0.4467, while removing both temporal terms increases it to 0.6008. Thus, the temporal losses perform their intended stabilization role. Their classification contribution is less direct: the no-acceleration variant is marginally higher under both classifiers, and the no-temporal variant ties Full under SVM and is slightly higher under RandomForest. None of these small accuracy differences is significant in the exploratory paired tests. In contrast, removing palm-normal alignment lowers SVM accuracy by 0.0208; Full exceeds this variant in five repeats and ties in fifteen, with an exploratory Wilcoxon value of $p=0.0384$. Replacing Huber with $L_2$ does not improve accuracy and increases mean solve time from approximately 30 ms to 72.9 ms per frame. These results support the palm and robust-fitting components while showing that the principal measurable contribution of temporal regularization is stability rather than an independent accuracy gain.
+
+\FloatBarrier
+\subsection{Dimension-matched PCA Baseline}
+Because Optimized Action is 17-dimensional, we compare it with PCA-17 fitted exclusively on the training frames of each repeat \cite{jolliffe2002pca}. The transformed frames are aggregated only after PCA fitting, and every representation uses identical train/test sequence IDs. Table~\ref{tab:pca_comparison} reports matched classifier comparisons rather than mixing the best result from different classifiers.
+
+\begin{table}[!t]
+\centering
+\caption{Accuracy for the dimension-matched PCA comparison. Values are means over 20 repeated three-shot sequence splits. Bold marks the best representation within each classifier.}
+\label{tab:pca_comparison}
+\footnotesize
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Representation & SVM & KNN & RandomForest & MLP \\
+\midrule
+Raw & 0.8250 & 0.7792 & 0.8708 & 0.8208 \\
+PCA-17 & 0.8958 & 0.9125 & \textbf{0.9458} & \textbf{0.9167} \\
+Corrected & 0.9458 & 0.9000 & 0.9083 & 0.8958 \\
+Optimized Action & \textbf{0.9667} & \textbf{0.9250} & 0.9292 & 0.9125 \\
+Optimized Full & 0.7917 & 0.7500 & 0.8500 & 0.7833 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{paper_rewrite_main/pca_all_classifiers_6class.png}
+\caption{Accuracy and macro-F1 for PCA-17 and structured representations under all four classifiers. Optimized Action is strongest under SVM and KNN, whereas PCA-17 is strongest under RandomForest and narrowly strongest under MLP.}
 \label{fig:pca_comparison}
 \end{figure}
 
-This comparison leads to a more nuanced conclusion than a simple ``PCA versus structure'' story. On the one hand, the PCA baseline confirms that low-dimensional compression alone can be highly effective, especially for fine-grained Chinese dance gestures. On the other hand, Optimized Action remains the strongest structured representation and achieves the best overall accuracy under SVM. The current evidence therefore suggests that structured actuator-space refinement and low-dimensional geometric compression preserve complementary discriminative cues, and their relative strength depends on the downstream classifier.
+The PCA comparison rules out a simple universal claim that actuator-space structure always outperforms generic compression. Optimized Action provides the highest SVM and KNN accuracy and the best overall accuracy, while PCA-17 is stronger under RandomForest and slightly stronger under MLP. The evidence therefore supports Optimized Action as an interpretable and competitive structured representation, not as a universally dominant dimensionality-reduction method.
 
 \FloatBarrier
 \section{Discussion}
-\subsection{Why Frame Correction Improves Sequence Classification}
+\subsection{Why Structured Refinement Improves Sequence Classification}
 Sequence classifiers depend on stable frame-level evidence. When raw landmarks fluctuate because of viewpoint changes or self-occlusion, the resulting sequence descriptors mix gesture information with estimation noise. The smoothing comparison in Table~\ref{tab:smoothing_baselines} clarifies that coordinate-space smoothness and discriminative representation quality are related but not equivalent.
 
-Moving-average and Savitzky--Golay filtering do not improve RandomForest accuracy over the raw landmark baseline, while One-Euro filtering produces only a modest gain. Kalman filtering is the strongest conventional smoothing baseline, reaching $0.9125 \pm 0.0720$ accuracy. Nevertheless, Optimized Action achieves the highest RandomForest performance at $0.9292 \pm 0.0660$ accuracy, together with the strongest macro-F1 and Cohen's kappa. This suggests that the benefit of the structured ORCA/MuJoCo representation is not simply a result of reducing coordinate-space jitter. Instead, the optimized actuator trajectory appears to preserve discriminative articulation cues while also imposing temporal and embodiment constraints.
+Moving-average and Savitzky--Golay filtering do not improve RandomForest accuracy over the raw landmark baseline, while One-Euro filtering produces only a modest gain. Kalman filtering is the strongest conventional smoothing baseline, reaching $0.9125 \pm 0.0720$ accuracy and a marginally higher macro-F1 than Optimized Action. Nevertheless, Optimized Action achieves the highest RandomForest accuracy at $0.9292 \pm 0.0605$ and the highest Cohen's kappa at $0.9129 \pm 0.0742$. This suggests that the benefit of the structured ORCA/MuJoCo representation is not simply a result of reducing coordinate-space jitter. Instead, the optimized actuator trajectory appears to preserve discriminative articulation cues while also imposing temporal and embodiment constraints.
 
 \subsection{Reconstruction versus Discriminative Representation}
 A lower reconstruction error does not necessarily imply better classification. The reconstructed landmark space Optimized Full is useful for visualization and kinematic plausibility checks, but the compact actuator representation Optimized Action is more attractive for few-shot classification because it is lower-dimensional, structured, and semantically aligned with hand articulation.
 
-The PCA comparison provides a second clarification. Even if a compact representation improves classification, that improvement is not automatically evidence for embodiment-aware refinement, because generic dimensionality reduction can also help in low-data settings. For this reason, PCA baselines are necessary to test whether the benefit comes merely from compression. The updated six-class results reveal an important trade-off: under RandomForest, PCA-compressed raw landmarks can outperform the structured actuator representation, suggesting that a geometry-preserving low-dimensional embedding remains highly effective for this fine-grained task. Under SVM and MLP, however, Optimized Action remains the strongest structured representation. This makes the paper stronger rather than weaker: instead of claiming universal dominance, the method can be presented as a robust, interpretable, and highly competitive structured alternative to generic dimensionality reduction.
+The PCA comparison provides a second clarification. Even if a compact representation improves classification, that improvement is not automatically evidence for embodiment-aware refinement, because generic dimensionality reduction can also help in low-data settings. PCA-17 is strongest under RandomForest and MLP, while Optimized Action is strongest under SVM and KNN. Across all reported settings, SVM with Optimized Action gives the highest mean accuracy. Rather than claiming universal dominance, the method is therefore positioned as an interpretable and highly competitive structured alternative whose relative benefit depends on the downstream learner.
+
+\subsection{Stability versus Discrimination}
+The loss ablation demonstrates that temporal smoothness and downstream discrimination are not interchangeable objectives. Acceleration and first-order temporal penalties substantially reduce actuator-space variation, but removing them does not reduce classification accuracy on the current small dataset. This does not make the temporal terms ineffective: they achieve their explicit purpose of suppressing abrupt latent-state changes. It does show that accuracy alone cannot validate a denoising term. Conversely, the palm-normal term provides little additional smoothing but improves SVM recognition, suggesting that orientation consistency preserves class-relevant structure. Future parameter selection should therefore consider both recovery or stability metrics and downstream recognition rather than optimizing either criterion in isolation.
 
 \subsection{Limitations}
-The current evaluation uses lightweight statistical sequence aggregation, which is convenient and interpretable but discards temporal ordering beyond low-order summaries. The dataset is also still relatively small and moderately imbalanced, so cross-session validation with more subjects and more gesture classes is necessary before drawing stronger generalization claims. Finally, the PCA baseline shows that some discriminative information in raw landmark geometry may not yet be fully captured by the current actuator mapping.
+The current evaluation uses lightweight statistical sequence aggregation, which is convenient and interpretable but discards temporal ordering beyond low-order summaries. More importantly, the CSV does not encode participant or session identity, so the sequence-disjoint results cannot establish cross-subject or cross-session generalization. The dataset is small and moderately imbalanced, and the repeated holdout tests reuse overlapping samples; their $p$-values are therefore exploratory rather than independent population-level significance tests. The trajectory in Figure~\ref{fig:trajectory_example} was deliberately selected as a high-jitter diagnostic example and should not be interpreted as an unbiased estimate of average visual improvement. The coordinate alignment translates and scales the hand but does not yet construct a fully canonical palm-local frame. Finally, the P95 solver latency exceeds a strict 30-FPS budget, and PCA-17 shows that raw geometry retains discriminative information not fully captured by the current actuator mapping.
 
-\subsection{Future Work with Stronger Temporal Models}
-The current framework isolates the effect of frame-level correction. A natural next step is to combine the robust actuator trajectory with stronger temporal encoders, such as GRU or LSTM baselines, to evaluate whether richer sequence models can further improve recognition accuracy. Another promising direction is to fuse PCA-compressed landmark cues with the optimized actuator trajectory, since the present results suggest that the two representations preserve complementary information.
+\subsection{Future Work}
+The immediate next step is subject- and session-annotated data collection followed by group-disjoint evaluation. Stronger temporal encoders can then test whether the refined actuator trajectory remains useful when sequence order is modeled explicitly. A separate extension is confidence-aware refinement: per-landmark reliability estimates could reduce the observation weight of an occluded finger and increase reliance on a learned temporal prior. We deliberately leave that learned, adaptive formulation outside the scope of the present fixed-weight method. Fusion of PCA-compressed landmark cues with Optimized Action is another promising direction because the two representations preserve complementary information.
 
 \section{Conclusion}
-We present a MuJoCo-constrained temporal optimization framework for refining noisy hand landmarks in an ORCA actuator space. The method moves beyond conventional temporal smoothing by enforcing embodiment priors and forward-kinematic consistency while incorporating robust loss design and temporal regularization. On the current six-class Chinese dance gesture subset, the refined actuator representation consistently improves over raw landmarks and heuristic actuator projection across lightweight classifiers. Comparisons against smoothing and PCA baselines reveal a more nuanced but more convincing story: the benefit is not merely due to ordinary filtering, and strong low-dimensional compression remains competitive in some classifier settings. Overall, the results support the value of improving landmark-sequence quality before downstream gesture recognition, while also motivating future hybrid representations that combine structured actuator refinement with generic geometric compression.
+We presented a fixed-weight causal MuJoCo-constrained framework for refining MediaPipe observations in ORCA actuator space. On the current six-class prototype subset, Optimized Action improves over raw landmarks across four lightweight classifiers and reaches $0.9667\pm0.0408$ accuracy with SVM. Conventional smoothing, PCA-17, and loss ablation qualify this result. Kalman filtering is the strongest coordinate-space smoother; PCA-17 is stronger under RandomForest and MLP; and temporal regularization improves actuator stability without independently increasing classification accuracy. Palm-normal alignment and robust Huber fitting provide more direct support for discriminative refinement, while Optimized Full confirms that reconstructing a higher-dimensional landmark representation is not automatically beneficial. These findings support a structured and interpretable representation-level contribution, but larger subject- and session-disjoint experiments remain necessary before making general claims about Chinese dance gesture recognition.
+
+\appendix
+\section{Additional Diagnostic Figures}
+
+Figure~\ref{fig:per_class_recall_appendix} reports per-class SVM recall in a format complementary to the confusion matrices. Figure~\ref{fig:all_classifier_cm_appendix} shows that the remaining errors under Optimized Action depend on the downstream classifier. Figure~\ref{fig:ablation_accuracy_appendix} provides the classification-only view of the loss ablation, and Figure~\ref{fig:implementation_validation_appendix} summarizes the palm-normal consistency regression test and synthetic recovery check used to validate the implementation.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.94\linewidth]{paper_rewrite_main/per_class_recall_svm_6class.png}
+\caption{Per-class SVM recall across Raw, Corrected, and Optimized Action. The largest gains over Raw occur for flower pinch, orchid finger, and three-finger bent, whereas deer horn remains difficult.}
+\label{fig:per_class_recall_appendix}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.88\linewidth]{paper_rewrite_main/cm_optimized_action_all_classifiers_6class.png}
+\caption{Aggregate confusion matrices for Optimized Action under all four classifiers.}
+\label{fig:all_classifier_cm_appendix}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.94\linewidth]{paper_rewrite_main/loss_ablation_6class.png}
+\caption{SVM and RandomForest accuracy for the targeted loss ablations. Error bars show standard deviation over the same 20 repeated few-shot sequence splits.}
+\label{fig:ablation_accuracy_appendix}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.82\linewidth]{paper_rewrite_main/implementation_validation_before_after.png}
+\caption{Implementation validation of the consistent palm-normal convention. The MuJoCo-generated target and predicted normals align after the correction, while synthetic actuator and landmark recovery errors decrease. This diagnostic validates the objective implementation rather than constituting a separate recognition baseline.}
+\label{fig:implementation_validation_appendix}
+\end{figure}
 
 \bibliographystyle{ieeetr}
 \bibliography{references}
