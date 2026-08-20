@@ -485,16 +485,16 @@ MLP & Corrected & +0.0167 & 8 / 8 / 4 & 0.1254 \\
 \begin{figure}[!t]
 \centering
 \includegraphics[width=0.96\linewidth]{paper_rewrite_main/paired_accuracy_improvement_6class.png}
-\caption{Paired accuracy differences across the same 20 few-shot sequence splits. Values above zero favor Optimized Action. Improvements over Raw are consistent across classifiers, whereas the smaller gains over Corrected reveal the remaining uncertainty associated with the current dataset size.}
+\caption{Paired accuracy differences across the same 20 three-shot supervised sequence splits. Values above zero favor Optimized Action. Improvements over Raw are consistent across classifiers, whereas the smaller gains over Corrected reveal the remaining uncertainty associated with the current dataset size.}
 \label{fig:paired_accuracy}
 \end{figure}
 
 \subsection{Comparison with Conventional Smoothing Baselines}
-To determine whether the classification gains can be explained by ordinary coordinate-space denoising, we compare raw landmarks, four conventional temporal filters, and the proposed structured representations using the same RandomForest few-shot protocol. Each result is reported as mean $\pm$ standard deviation over 20 repeated three-shot splits. The smoothing baselines are moving average, Savitzky--Golay, One-Euro, and Kalman filtering.
+To determine whether the classification gains can be explained by ordinary coordinate-space denoising, we compare raw landmarks, four conventional temporal filters, and the proposed structured representations using the same RandomForest three-shot protocol. Each result is reported as mean $\pm$ standard deviation over 20 repeated three-shot splits. The smoothing baselines are moving average, Savitzky--Golay, One-Euro, and Kalman filtering.
 
 \begin{table}[H]
 \centering
-\caption{RandomForest few-shot classification comparison between conventional landmark-space smoothing and structured ORCA/MuJoCo representations. Results are mean $\pm$ standard deviation over 20 repeated three-shot splits.}
+\caption{RandomForest three-shot classification comparison between conventional landmark-space smoothing and structured ORCA/MuJoCo representations. Results are mean $\pm$ standard deviation over 20 repeated sequence-level splits.}
 \label{tab:smoothing_baselines}
 \footnotesize
 \begin{tabular}{@{}lccc@{}}
@@ -549,7 +549,7 @@ We evaluate five targeted variants without retuning the remaining weights: remov
 
 \begin{table}[!t]
 \centering
-\caption{Loss ablation in actuator space. Stability values are averaged over 56 sequences; classification values are mean $\pm$ standard deviation over the same 20 few-shot splits. Lower stability values indicate smoother trajectories.}
+\caption{Loss ablation in actuator space. Stability values are averaged over 56 sequences; classification values are mean $\pm$ standard deviation over the same 20 three-shot supervised splits. Lower stability values indicate smoother trajectories.}
 \label{tab:loss_ablation}
 \scriptsize
 \begin{tabular}{@{}lcccc@{}}
@@ -661,7 +661,7 @@ Figure~\ref{fig:per_class_recall_appendix} reports per-class SVM recall in a for
 \begin{figure}[!t]
 \centering
 \includegraphics[width=0.94\linewidth]{paper_rewrite_main/loss_ablation_6class.png}
-\caption{SVM and RandomForest accuracy for the targeted loss ablations. Error bars show standard deviation over the same 20 repeated few-shot sequence splits.}
+\caption{SVM and RandomForest accuracy for the targeted loss ablations. Error bars show standard deviation over the same 20 repeated three-shot supervised sequence splits.}
 \label{fig:ablation_accuracy_appendix}
 \end{figure}
 
