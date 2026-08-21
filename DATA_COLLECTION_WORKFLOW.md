@@ -213,3 +213,46 @@ If no samples are saved:
 - make sure a hand is detected in the preview
 - in sequence mode, confirm recording was started with `space`
 - check that the selected hand matches `--target-hand`
+
+
+## 13. Current Canonical Datasets
+
+The current project contains two different evaluation scopes:
+
+- `diagnostics/updated_6class_20260820/gesture_sequence_dataset_chinese_dance_6class_after_fix.csv`
+  - 571 sequences and 26,260 frames
+  - six Chinese dance gesture classes only
+  - use this file for the main paper experiments
+- `gesture_sequence_dataset_all_9class_after_fix.csv`
+  - 610 sequences and 31,669 frames
+  - the six Chinese dance classes plus labels `6`, `7`, and `8`
+  - use this file for full-archive or distractor-class experiments
+
+The older `gesture_sequence_dataset.csv` and `gesture_sequence_dataset_more.csv`
+are already contained in the nine-class optimized dataset. Do not append them
+again without auditing, because that would duplicate sequences.
+
+Audit any set of CSV files before merging:
+
+```powershell
+python .\audit_gesture_datasets.py `
+  .\gesture_sequence_dataset.csv `
+  .\gesture_sequence_dataset_more_aligned.csv `
+  .\gesture_sequence_dataset_all_9class_after_fix.csv
+```
+
+The current nine-class canonical file was created without overwriting any
+existing dataset:
+
+```powershell
+python .\merge_gesture_datasets.py `
+  --master .\gesture_sequence_dataset_all_9class_after_fix.csv `
+  --sources `
+    .\diagnostics\updated_6class_20260820\gesture_sequence_dataset_chinese_dance_6class_after_fix.csv `
+    .\gesture_sequence_dataset_optimized_v2.csv `
+  --no-backup
+```
+
+The merge uses `label + sequence_id + frame_id` for deduplication. When a newly
+collected batch may reuse sequence IDs from an earlier batch, assign unique
+sequence IDs during collection or audit the files before merging.

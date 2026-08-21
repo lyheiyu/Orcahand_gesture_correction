@@ -217,3 +217,19 @@ __marimo__/
 
 *.lock
 *.DS_Store
+
+# Local gesture datasets (large, generated, and potentially participant-sensitive)
+/gesture_sequence_dataset*.csv
+/gesture_sequence_dataset*.csv.bak
+
+# Large frame-level diagnostic artifacts; keep Markdown and compact figure summaries
+/diagnostics/**/gesture_sequence_dataset*.csv
+/diagnostics/**/ablation_features*.csv
+/diagnostics/**/ablation_*_frames.csv
+/diagnostics/**/runtime_frames*.csv
+
+# Generated archives and model checkpoints
+*.zip
+*.bak
+*.pth
+*.pt

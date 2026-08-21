@@ -1,0 +1,5 @@
+variant,frames,success_rate,solve_time_mean_ms,solve_time_median_ms,solve_time_p95_ms,iterations_mean,weights
+no_palm,26260,1.0,31.98923383074173,30.648450076114386,42.87726994371042,6.041012947448591,"{""acceleration"": 0.15, ""boundary"": 0.05, ""default_pose"": 0.15, ""huber_delta"": 0.08, ""landmark"": 1.0, ""palm"": 0.0, ""prior"": 0.3, ""temporal"": 0.1}"
+no_acceleration,26260,1.0,33.5517104111354,32.45559998322278,45.23380495957099,6.397867479055598,"{""acceleration"": 0.0, ""boundary"": 0.05, ""default_pose"": 0.15, ""huber_delta"": 0.08, ""landmark"": 1.0, ""palm"": 0.2, ""prior"": 0.3, ""temporal"": 0.1}"
+no_temporal,26260,1.0,34.9123918851419,33.46770000644028,47.64021500013769,6.705064737242955,"{""acceleration"": 0.0, ""boundary"": 0.05, ""default_pose"": 0.15, ""huber_delta"": 0.08, ""landmark"": 1.0, ""palm"": 0.2, ""prior"": 0.3, ""temporal"": 0.0}"
+l2,26260,1.0,74.89478424977389,73.97709996439517,100.90979003580287,10.134310738766183,"{""acceleration"": 0.15, ""boundary"": 0.05, ""default_pose"": 0.15, ""huber_delta"": 0.0, ""landmark"": 1.0, ""palm"": 0.2, ""prior"": 0.3, ""temporal"": 0.1}"

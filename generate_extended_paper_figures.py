@@ -225,7 +225,9 @@ def performance_heatmaps(rows: list[dict[str, object]], output_dir: Path) -> Non
                     if row["feature_set"] == feature_set and row["classifier"] == classifier
                 ]
                 matrix[row_index, col_index] = np.mean(selected)
-        image = ax.imshow(matrix, cmap="YlGnBu", vmin=0.68, vmax=1.0, aspect="auto")
+        # Keep the full pilot-performance range visible when a larger dataset
+        # makes raw-landmark baselines substantially harder.
+        image = ax.imshow(matrix, cmap="YlGnBu", vmin=0.20, vmax=1.0, aspect="auto")
         ax.set_title(title, fontweight="bold")
         ax.set_xticks(np.arange(len(CLASSIFIERS)))
         ax.set_xticklabels([DISPLAY_CLASSIFIERS[value] for value in CLASSIFIERS], rotation=25, ha="right")
@@ -258,7 +260,15 @@ def _draw_cm(ax, cm: np.ndarray, labels: list[str], title: str) -> object:
     normalized = _normalized_cm(cm)
     image = ax.imshow(normalized, cmap="Blues", vmin=0.0, vmax=1.0)
     ax.set_title(title, fontweight="bold")
-    short_labels = [label.replace("three_finger_bent", "three_finger") for label in labels]
+    paper_labels = {
+        "deer_horn": "Deer horn",
+        "flower_pinch": "Flower pinch",
+        "orchid_finger": "Orchid finger",
+        "orchid_palm": "Orchid palm",
+        "prayer_beads": "Prayer beads",
+        "three_finger_bent": "Three-finger",
+    }
+    short_labels = [paper_labels.get(label, label.replace("_", " ").title()) for label in labels]
     ax.set_xticks(np.arange(len(labels)))
     ax.set_yticks(np.arange(len(labels)))
     ax.set_xticklabels(short_labels, rotation=35, ha="right", fontsize=8)
@@ -496,11 +506,17 @@ def main() -> None:
     parser.add_argument("--dataset", default="diagnostics/gesture_sequence_dataset_chinese_dance_6class_after_fix.csv")
     parser.add_argument("--split-manifest", default="diagnostics/palm_fix_split_manifest_6class.csv")
     parser.add_argument("--output-dir", default="figures/paper_rewrite_main")
+    parser.add_argument(
+        "--actuator-table",
+        default="figures/paper_rewrite_main/actuator_definition_table.csv",
+        help="Actuator definition CSV used to label the trajectory figure.",
+    )
     args = parser.parse_args()
 
     dataset = (ROOT / args.dataset).resolve()
     manifest = (ROOT / args.split_manifest).resolve()
     output_dir = (ROOT / args.output_dir).resolve()
+    actuator_table = (ROOT / args.actuator_table).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     _style()
 
@@ -510,7 +526,7 @@ def main() -> None:
     performance_heatmaps(rows, output_dir)
     confusion_panels(confusions, class_labels, output_dir)
     per_class_recall_figure(confusions, class_labels, output_dir)
-    trajectory_figure(dataset, output_dir / "actuator_definition_table.csv", output_dir)
+    trajectory_figure(dataset, actuator_table, output_dir)
     pipeline_figure(output_dir)
     implementation_validation_figure(
         ROOT / "diagnostics" / "palm_fix_before.json",

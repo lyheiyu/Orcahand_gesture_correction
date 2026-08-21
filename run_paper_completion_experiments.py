@@ -470,12 +470,12 @@ def evaluate_ablation_stability(
             label=DISPLAY_ABLATION[feature_set],
         )
         annotation_offsets = {
-            "corrected": (-82, 4),
+            "corrected": (-82, -18),
             "full": (6, 4),
             "no_palm": (8, 14),
             "no_acceleration": (6, 4),
             "no_temporal": (6, 4),
-            "l2": (8, -18),
+            "l2": (8, 8),
         }
         axes[1].annotate(
             DISPLAY_ABLATION[feature_set],
@@ -559,7 +559,7 @@ def _plot_pca_suite(rows: list[dict[str, object]], output_dir: Path) -> None:
                 matrix[i, j] = np.mean(
                     [float(row[metric]) for row in rows if row["feature_set"] == feature_set and row["classifier"] == classifier]
                 )
-        image = ax.imshow(matrix, cmap="YlGnBu", vmin=0.65, vmax=1.0, aspect="auto")
+        image = ax.imshow(matrix, cmap="YlGnBu", vmin=0.20, vmax=1.0, aspect="auto")
         ax.set_title(title, fontweight="bold")
         ax.set_xticks(range(len(CLASSIFIERS)), [DISPLAY_CLASSIFIERS[value] for value in CLASSIFIERS], rotation=25, ha="right")
         ax.set_yticks(range(len(PCA_FEATURES)), [DISPLAY_PCA[value] for value in PCA_FEATURES])
