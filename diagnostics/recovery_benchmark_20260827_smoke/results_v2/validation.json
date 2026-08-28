@@ -1,0 +1,11 @@
+{
+  "num_sequences": 5,
+  "num_frames": 345,
+  "nonfinite_values": 0,
+  "bound_violations": 0,
+  "oa_success_rate_mean": 1.0,
+  "oa_iterations_mean": 6.231950036541973,
+  "oa_solve_time_ms_mean": 32.94734830961404,
+  "oa_solve_time_ms_p95_mean": 45.649119515437626,
+  "history_reset_max_abs_difference": 0.0
+}

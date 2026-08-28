@@ -1,0 +1,2 @@
+selection_rule,sequence_id,label,frames,corrected_acceleration,optimized_acceleration,plotted_actuator_indices
+median positive sequence-level acceleration improvement,d5922c1146c7,deer_horn,10,0.832511305809021,0.4293334484100342,9;6;3

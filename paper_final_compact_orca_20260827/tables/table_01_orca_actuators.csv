@@ -1,0 +1,18 @@
+index,actuator,role,finger,type,lower_rad,upper_rad,compact7
+0,right_wrist_actuator,wrist,wrist,wrist,-1.1345,0.6109,no
+1,right_p-abd_actuator,little abduction,little,abduction,-0.5236,0.5236,no
+2,right_p-mcp_actuator,little MCP flexion,little,flexion,-0.4363,1.7453,no
+3,right_p-pip_actuator,little PIP flexion,little,flexion,-0.2618,1.8675,yes
+4,right_r-abd_actuator,ring abduction,ring,abduction,-0.4712,0.4712,no
+5,right_r-mcp_actuator,ring MCP flexion,ring,flexion,-0.4363,1.7453,no
+6,right_r-pip_actuator,ring PIP flexion,ring,flexion,-0.2618,1.8675,yes
+7,right_m-abd_actuator,middle abduction,middle,abduction,-0.4712,0.4712,no
+8,right_m-mcp_actuator,middle MCP flexion,middle,flexion,-0.4363,1.7453,no
+9,right_m-pip_actuator,middle PIP flexion,middle,flexion,-0.2618,1.8675,yes
+10,right_i-abd_actuator,index abduction,index,abduction,-0.4363,0.5236,no
+11,right_i-mcp_actuator,index MCP flexion,index,flexion,-0.4363,1.7453,yes
+12,right_i-pip_actuator,index PIP flexion,index,flexion,-0.2618,1.8675,yes
+13,right_t-cmc_actuator,thumb opposition / CMC,thumb,opposition,-0.7854,0.5760,no
+14,right_t-abd_actuator,thumb abduction,thumb,abduction,-0.3142,0.9599,no
+15,right_t-mcp_actuator,thumb MCP flexion,thumb,flexion,-0.4363,1.7453,yes
+16,right_t-pip_actuator,thumb IP flexion,thumb,flexion,-0.2618,1.8675,yes

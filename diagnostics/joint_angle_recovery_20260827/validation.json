@@ -1,0 +1,27 @@
+{
+  "num_sequences_total": 571,
+  "num_development_sequences": 457,
+  "num_frozen_test_sequences": 114,
+  "num_smoke_sequences": 6,
+  "smoke_sequence_ids": [
+    "0078bb88405b",
+    "010a5011bcfd",
+    "05c116dc4ea7",
+    "088859eb0563",
+    "0c54bf5d9c80",
+    "224a51a1dd12"
+  ],
+  "smoke_labels": [
+    "prayer_beads",
+    "orchid_finger",
+    "three_finger_bent",
+    "deer_horn",
+    "flower_pinch",
+    "orchid_palm"
+  ],
+  "nonfinite_values": 0,
+  "confidence_range_violations": 0,
+  "causal_future_perturbation_max_difference": 0.0,
+  "clean_corrupted_alignment": true,
+  "history_reset": "state is local to each recover_confidence_weighted call"
+}

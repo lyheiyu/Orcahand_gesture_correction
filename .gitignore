@@ -233,3 +233,5 @@ __marimo__/
 *.bak
 *.pth
 *.pt
+
+/diagnostics/**/occluded_*.csv

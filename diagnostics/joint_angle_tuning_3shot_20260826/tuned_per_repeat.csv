@@ -1,0 +1,841 @@
+repeat,shot,classifier,feature_set,training,accuracy,macro_f1,selected_parameters
+0,3,svm,raw,fixed,0.3565217391304348,0.34723280524922795,
+0,3,svm,raw,nested_tuned,0.33043478260869563,0.3108821733821734,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+0,3,knn,raw,fixed,0.3217391304347826,0.31448220093897256,
+0,3,knn,raw,nested_tuned,0.30434782608695654,0.25349344310154603,"{""model__n_neighbors"": 3, ""model__weights"": ""uniform""}"
+0,3,mlp,raw,fixed,0.4260869565217391,0.41926038286332407,
+0,3,mlp,raw,nested_tuned,0.4260869565217391,0.41926038286332407,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+0,3,svm,raw_pca11,fixed,0.5565217391304348,0.5669125588047011,
+0,3,svm,raw_pca11,nested_tuned,0.5652173913043478,0.574906719952092,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+0,3,knn,raw_pca11,fixed,0.5304347826086957,0.5243643217520927,
+0,3,knn,raw_pca11,nested_tuned,0.5304347826086957,0.5045454545454545,"{""model__n_neighbors"": 5, ""model__weights"": ""distance""}"
+0,3,mlp,raw_pca11,fixed,0.6,0.5979802397937779,
+0,3,mlp,raw_pca11,nested_tuned,0.6,0.5979802397937779,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+0,3,svm,raw_pca17,fixed,0.6260869565217392,0.6280803305293393,
+0,3,svm,raw_pca17,nested_tuned,0.6608695652173913,0.6478317149307715,"{""model__C"": 0.1, ""model__gamma"": 0.01}"
+0,3,knn,raw_pca17,fixed,0.6086956521739131,0.6086472307422209,
+0,3,knn,raw_pca17,nested_tuned,0.5130434782608696,0.5167858009391191,"{""model__n_neighbors"": 9, ""model__weights"": ""distance""}"
+0,3,mlp,raw_pca17,fixed,0.6695652173913044,0.6887999652705535,
+0,3,mlp,raw_pca17,nested_tuned,0.6086956521739131,0.6135502079619727,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+0,3,svm,joint_angle,fixed,0.7304347826086957,0.7474946458178165,
+0,3,svm,joint_angle,nested_tuned,0.7217391304347827,0.7270406554028744,"{""model__C"": 0.1, ""model__gamma"": 0.01}"
+0,3,knn,joint_angle,fixed,0.6956521739130435,0.691662946982096,
+0,3,knn,joint_angle,nested_tuned,0.7130434782608696,0.7144734960524435,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+0,3,mlp,joint_angle,fixed,0.7217391304347827,0.7206252402680974,
+0,3,mlp,joint_angle,nested_tuned,0.7565217391304347,0.755458867958868,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+0,3,svm,corrected,fixed,0.782608695652174,0.789004277834065,
+0,3,svm,corrected,nested_tuned,0.782608695652174,0.789004277834065,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+0,3,knn,corrected,fixed,0.6869565217391305,0.6812048377513272,
+0,3,knn,corrected,nested_tuned,0.7130434782608696,0.7146224690713442,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+0,3,mlp,corrected,fixed,0.782608695652174,0.7827116210243146,
+0,3,mlp,corrected,nested_tuned,0.7478260869565218,0.7475956904528335,"{""model__alpha"": 0.01, ""model__hidden_layer_sizes"": [64, 32]}"
+0,3,svm,optimized_action,fixed,0.7913043478260869,0.7987554187804501,
+0,3,svm,optimized_action,nested_tuned,0.5130434782608696,0.47739821950348266,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+0,3,knn,optimized_action,fixed,0.7043478260869566,0.6985544440697864,
+0,3,knn,optimized_action,nested_tuned,0.7304347826086957,0.7329674029162522,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+0,3,mlp,optimized_action,fixed,0.7478260869565218,0.7537994165901143,
+0,3,mlp,optimized_action,nested_tuned,0.7217391304347827,0.7152172127781884,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+0,3,svm,optimized_full,fixed,0.5304347826086957,0.5220700546498418,
+0,3,svm,optimized_full,nested_tuned,0.41739130434782606,0.4045882216032113,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+0,3,knn,optimized_full,fixed,0.4,0.3724031427163732,
+0,3,knn,optimized_full,nested_tuned,0.40869565217391307,0.39733611826928206,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+0,3,mlp,optimized_full,fixed,0.48695652173913045,0.4872987777012545,
+0,3,mlp,optimized_full,nested_tuned,0.48695652173913045,0.4872987777012545,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+1,3,svm,raw,fixed,0.4260869565217391,0.43212378447313887,
+1,3,svm,raw,nested_tuned,0.4260869565217391,0.43212378447313887,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+1,3,knn,raw,fixed,0.3565217391304348,0.349771027345398,
+1,3,knn,raw,nested_tuned,0.3652173913043478,0.34252779899838726,"{""model__n_neighbors"": 7, ""model__weights"": ""distance""}"
+1,3,mlp,raw,fixed,0.41739130434782606,0.4170149167268982,
+1,3,mlp,raw,nested_tuned,0.41739130434782606,0.4170149167268982,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+1,3,svm,raw_pca11,fixed,0.5391304347826087,0.5543456382078673,
+1,3,svm,raw_pca11,nested_tuned,0.4260869565217391,0.39004152894313077,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+1,3,knn,raw_pca11,fixed,0.5130434782608696,0.5090660782733953,
+1,3,knn,raw_pca11,nested_tuned,0.5043478260869565,0.49969404796991007,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+1,3,mlp,raw_pca11,fixed,0.5043478260869565,0.5248933265062298,
+1,3,mlp,raw_pca11,nested_tuned,0.5043478260869565,0.5248933265062298,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+1,3,svm,raw_pca17,fixed,0.6,0.6046815231468932,
+1,3,svm,raw_pca17,nested_tuned,0.6,0.6046815231468932,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+1,3,knn,raw_pca17,fixed,0.6086956521739131,0.6204729401914166,
+1,3,knn,raw_pca17,nested_tuned,0.6086956521739131,0.6204729401914166,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+1,3,mlp,raw_pca17,fixed,0.6434782608695652,0.6429809772267017,
+1,3,mlp,raw_pca17,nested_tuned,0.6086956521739131,0.6137830834674688,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+1,3,svm,joint_angle,fixed,0.6782608695652174,0.6836542769140808,
+1,3,svm,joint_angle,nested_tuned,0.7043478260869566,0.7006151519474922,"{""model__C"": 1.0, ""model__gamma"": ""scale""}"
+1,3,knn,joint_angle,fixed,0.7130434782608696,0.7023275335775336,
+1,3,knn,joint_angle,nested_tuned,0.7652173913043478,0.7732535438417791,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+1,3,mlp,joint_angle,fixed,0.6869565217391305,0.6822796131619661,
+1,3,mlp,joint_angle,nested_tuned,0.6521739130434783,0.6486709589319647,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+1,3,svm,corrected,fixed,0.7565217391304347,0.7676359460757135,
+1,3,svm,corrected,nested_tuned,0.7739130434782608,0.7795706850935055,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+1,3,knn,corrected,fixed,0.7130434782608696,0.7169152880836495,
+1,3,knn,corrected,nested_tuned,0.6869565217391305,0.6836105380617957,"{""model__n_neighbors"": 5, ""model__weights"": ""distance""}"
+1,3,mlp,corrected,fixed,0.7478260869565218,0.7593826679192532,
+1,3,mlp,corrected,nested_tuned,0.7913043478260869,0.794079988073041,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+1,3,svm,optimized_action,fixed,0.6869565217391305,0.6994564784101386,
+1,3,svm,optimized_action,nested_tuned,0.6869565217391305,0.6994564784101386,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+1,3,knn,optimized_action,fixed,0.6434782608695652,0.6403947791142913,
+1,3,knn,optimized_action,nested_tuned,0.7565217391304347,0.7667940806238679,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+1,3,mlp,optimized_action,fixed,0.7478260869565218,0.759907750491982,
+1,3,mlp,optimized_action,nested_tuned,0.782608695652174,0.7798907206801945,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+1,3,svm,optimized_full,fixed,0.4,0.40717506102909057,
+1,3,svm,optimized_full,nested_tuned,0.4,0.40717506102909057,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+1,3,knn,optimized_full,fixed,0.3826086956521739,0.3723712377047281,
+1,3,knn,optimized_full,nested_tuned,0.34782608695652173,0.3452219453672942,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+1,3,mlp,optimized_full,fixed,0.45217391304347826,0.44086003102011434,
+1,3,mlp,optimized_full,nested_tuned,0.4260869565217391,0.4166028292085364,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+2,3,svm,raw,fixed,0.4260869565217391,0.3889519109908915,
+2,3,svm,raw,nested_tuned,0.3826086956521739,0.37205593853957136,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+2,3,knn,raw,fixed,0.3565217391304348,0.34057423924540425,
+2,3,knn,raw,nested_tuned,0.4,0.37029367918902806,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+2,3,mlp,raw,fixed,0.3739130434782609,0.3534830787364294,
+2,3,mlp,raw,nested_tuned,0.3130434782608696,0.3003811627465141,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+2,3,svm,raw_pca11,fixed,0.5565217391304348,0.5511475879013192,
+2,3,svm,raw_pca11,nested_tuned,0.4956521739130435,0.4993530331698457,"{""model__C"": 0.1, ""model__gamma"": 0.01}"
+2,3,knn,raw_pca11,fixed,0.4956521739130435,0.4926982851131458,
+2,3,knn,raw_pca11,nested_tuned,0.5565217391304348,0.5472475499784338,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+2,3,mlp,raw_pca11,fixed,0.5739130434782609,0.5681600232558625,
+2,3,mlp,raw_pca11,nested_tuned,0.5217391304347826,0.5082198645223855,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+2,3,svm,raw_pca17,fixed,0.7130434782608696,0.7105441671618142,
+2,3,svm,raw_pca17,nested_tuned,0.6260869565217392,0.6146639852522205,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+2,3,knn,raw_pca17,fixed,0.6086956521739131,0.607090259108043,
+2,3,knn,raw_pca17,nested_tuned,0.6434782608695652,0.633535654626042,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+2,3,mlp,raw_pca17,fixed,0.6260869565217392,0.6166155068594094,
+2,3,mlp,raw_pca17,nested_tuned,0.6260869565217392,0.6166155068594094,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+2,3,svm,joint_angle,fixed,0.7217391304347827,0.7244327553295387,
+2,3,svm,joint_angle,nested_tuned,0.7739130434782608,0.7699839374257978,"{""model__C"": 0.1, ""model__gamma"": 0.01}"
+2,3,knn,joint_angle,fixed,0.7565217391304347,0.7501212298602007,
+2,3,knn,joint_angle,nested_tuned,0.8173913043478261,0.8144695952141395,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+2,3,mlp,joint_angle,fixed,0.808695652173913,0.8064102564102565,
+2,3,mlp,joint_angle,nested_tuned,0.7478260869565218,0.7348044325088802,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+2,3,svm,corrected,fixed,0.8521739130434782,0.8516543884964939,
+2,3,svm,corrected,nested_tuned,0.8434782608695652,0.8424869674869675,"{""model__C"": 5.0, ""model__gamma"": 0.01}"
+2,3,knn,corrected,fixed,0.782608695652174,0.781475419773292,
+2,3,knn,corrected,nested_tuned,0.8260869565217391,0.8199822758677477,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+2,3,mlp,corrected,fixed,0.782608695652174,0.7785582529484968,
+2,3,mlp,corrected,nested_tuned,0.782608695652174,0.777952873684581,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+2,3,svm,optimized_action,fixed,0.808695652173913,0.8091257421604565,
+2,3,svm,optimized_action,nested_tuned,0.8173913043478261,0.8180493064213995,"{""model__C"": 1.0, ""model__gamma"": ""scale""}"
+2,3,knn,optimized_action,fixed,0.7652173913043478,0.7624426117847172,
+2,3,knn,optimized_action,nested_tuned,0.7565217391304347,0.7463595302619693,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+2,3,mlp,optimized_action,fixed,0.782608695652174,0.7794734177712902,
+2,3,mlp,optimized_action,nested_tuned,0.6956521739130435,0.684513837562618,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+2,3,svm,optimized_full,fixed,0.4608695652173913,0.46897570476001854,
+2,3,svm,optimized_full,nested_tuned,0.4608695652173913,0.46897570476001854,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+2,3,knn,optimized_full,fixed,0.41739130434782606,0.365467058245516,
+2,3,knn,optimized_full,nested_tuned,0.4,0.36813255128619016,"{""model__n_neighbors"": 3, ""model__weights"": ""uniform""}"
+2,3,mlp,optimized_full,fixed,0.48695652173913045,0.4512759458441371,
+2,3,mlp,optimized_full,nested_tuned,0.45217391304347826,0.421822631347803,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+3,3,svm,raw,fixed,0.40869565217391307,0.3716271793256685,
+3,3,svm,raw,nested_tuned,0.40869565217391307,0.3716271793256685,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+3,3,knn,raw,fixed,0.3739130434782609,0.3509329459789035,
+3,3,knn,raw,nested_tuned,0.3652173913043478,0.34970343467254933,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+3,3,mlp,raw,fixed,0.3826086956521739,0.3494366744366744,
+3,3,mlp,raw,nested_tuned,0.3565217391304348,0.3386671905647238,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+3,3,svm,raw_pca11,fixed,0.5565217391304348,0.5543839758125473,
+3,3,svm,raw_pca11,nested_tuned,0.4434782608695652,0.3734038498189441,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+3,3,knn,raw_pca11,fixed,0.45217391304347826,0.4494142427756609,
+3,3,knn,raw_pca11,nested_tuned,0.45217391304347826,0.4494142427756609,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+3,3,mlp,raw_pca11,fixed,0.5304347826086957,0.5211275154012679,
+3,3,mlp,raw_pca11,nested_tuned,0.48695652173913045,0.48776795100324505,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+3,3,svm,raw_pca17,fixed,0.5391304347826087,0.5135786170036497,
+3,3,svm,raw_pca17,nested_tuned,0.5565217391304348,0.5224766545521262,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+3,3,knn,raw_pca17,fixed,0.5130434782608696,0.49440702087286525,
+3,3,knn,raw_pca17,nested_tuned,0.5043478260869565,0.48472909320503116,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+3,3,mlp,raw_pca17,fixed,0.5565217391304348,0.5361040318701609,
+3,3,mlp,raw_pca17,nested_tuned,0.5565217391304348,0.5361040318701609,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+3,3,svm,joint_angle,fixed,0.6260869565217392,0.6335893035893035,
+3,3,svm,joint_angle,nested_tuned,0.6434782608695652,0.638946821421747,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+3,3,knn,joint_angle,fixed,0.6608695652173913,0.6764100464100465,
+3,3,knn,joint_angle,nested_tuned,0.6,0.5920530492898913,"{""model__n_neighbors"": 3, ""model__weights"": ""uniform""}"
+3,3,mlp,joint_angle,fixed,0.6434782608695652,0.6479684254878054,
+3,3,mlp,joint_angle,nested_tuned,0.7304347826086957,0.7359787834052539,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+3,3,svm,corrected,fixed,0.6434782608695652,0.6171255842308474,
+3,3,svm,corrected,nested_tuned,0.6434782608695652,0.6171255842308474,"{""model__C"": 5.0, ""model__gamma"": ""auto""}"
+3,3,knn,corrected,fixed,0.6086956521739131,0.6113122171945701,
+3,3,knn,corrected,nested_tuned,0.6,0.581396161943545,"{""model__n_neighbors"": 9, ""model__weights"": ""distance""}"
+3,3,mlp,corrected,fixed,0.6173913043478261,0.6097236097236097,
+3,3,mlp,corrected,nested_tuned,0.6173913043478261,0.5827409658798842,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+3,3,svm,optimized_action,fixed,0.6,0.581981062725607,
+3,3,svm,optimized_action,nested_tuned,0.6173913043478261,0.5873625487707086,"{""model__C"": 1.0, ""model__gamma"": ""scale""}"
+3,3,knn,optimized_action,fixed,0.6086956521739131,0.5930546033944837,
+3,3,knn,optimized_action,nested_tuned,0.6086956521739131,0.5930546033944837,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+3,3,mlp,optimized_action,fixed,0.6260869565217392,0.6196103429255334,
+3,3,mlp,optimized_action,nested_tuned,0.5739130434782609,0.5394703220790177,"{""model__alpha"": 0.01, ""model__hidden_layer_sizes"": [64, 32]}"
+3,3,svm,optimized_full,fixed,0.4,0.4042179819490744,
+3,3,svm,optimized_full,nested_tuned,0.3565217391304348,0.3684630336518678,"{""model__C"": 0.1, ""model__gamma"": ""auto""}"
+3,3,knn,optimized_full,fixed,0.41739130434782606,0.4187348452431893,
+3,3,knn,optimized_full,nested_tuned,0.40869565217391307,0.40282418667989073,"{""model__n_neighbors"": 3, ""model__weights"": ""uniform""}"
+3,3,mlp,optimized_full,fixed,0.4434782608695652,0.4188123764423959,
+3,3,mlp,optimized_full,nested_tuned,0.4434782608695652,0.4188123764423959,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+4,3,svm,raw,fixed,0.4260869565217391,0.4305947766703581,
+4,3,svm,raw,nested_tuned,0.33043478260869563,0.3203111590838446,"{""model__C"": 5.0, ""model__gamma"": 1.0}"
+4,3,knn,raw,fixed,0.3391304347826087,0.33455194231056296,
+4,3,knn,raw,nested_tuned,0.3130434782608696,0.31529581529581535,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+4,3,mlp,raw,fixed,0.43478260869565216,0.44046845473628954,
+4,3,mlp,raw,nested_tuned,0.41739130434782606,0.41829858371211753,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+4,3,svm,raw_pca11,fixed,0.6608695652173913,0.6624414948398117,
+4,3,svm,raw_pca11,nested_tuned,0.6347826086956522,0.636519290330266,"{""model__C"": 5.0, ""model__gamma"": 0.01}"
+4,3,knn,raw_pca11,fixed,0.5565217391304348,0.5605874260206961,
+4,3,knn,raw_pca11,nested_tuned,0.5739130434782609,0.5821973815200021,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+4,3,mlp,raw_pca11,fixed,0.6086956521739131,0.6107286580970791,
+4,3,mlp,raw_pca11,nested_tuned,0.6086956521739131,0.6107286580970791,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+4,3,svm,raw_pca17,fixed,0.6260869565217392,0.6332950349472773,
+4,3,svm,raw_pca17,nested_tuned,0.5652173913043478,0.5367144147631953,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+4,3,knn,raw_pca17,fixed,0.6260869565217392,0.6270436841247227,
+4,3,knn,raw_pca17,nested_tuned,0.6521739130434783,0.6593261658668635,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+4,3,mlp,raw_pca17,fixed,0.6347826086956522,0.6362234613376506,
+4,3,mlp,raw_pca17,nested_tuned,0.6695652173913044,0.6780186612105119,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+4,3,svm,joint_angle,fixed,0.7478260869565218,0.7555120312320623,
+4,3,svm,joint_angle,nested_tuned,0.8173913043478261,0.8199657151253746,"{""model__C"": 5.0, ""model__gamma"": 0.01}"
+4,3,knn,joint_angle,fixed,0.7478260869565218,0.7530604446236424,
+4,3,knn,joint_angle,nested_tuned,0.6782608695652174,0.6817440895207595,"{""model__n_neighbors"": 9, ""model__weights"": ""distance""}"
+4,3,mlp,joint_angle,fixed,0.7478260869565218,0.7542476231992361,
+4,3,mlp,joint_angle,nested_tuned,0.7478260869565218,0.7538105551832387,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+4,3,svm,corrected,fixed,0.7652173913043478,0.7677137677137676,
+4,3,svm,corrected,nested_tuned,0.6695652173913044,0.6332894223263076,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+4,3,knn,corrected,fixed,0.7391304347826086,0.7517594914982796,
+4,3,knn,corrected,nested_tuned,0.7391304347826086,0.7470326359562316,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+4,3,mlp,corrected,fixed,0.7739130434782608,0.7736326109391124,
+4,3,mlp,corrected,nested_tuned,0.7739130434782608,0.7736326109391124,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+4,3,svm,optimized_action,fixed,0.7652173913043478,0.7672838009000996,
+4,3,svm,optimized_action,nested_tuned,0.782608695652174,0.786839573681679,"{""model__C"": 5.0, ""model__gamma"": 0.01}"
+4,3,knn,optimized_action,fixed,0.7217391304347827,0.7252429893558926,
+4,3,knn,optimized_action,nested_tuned,0.7130434782608696,0.7121641255145749,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+4,3,mlp,optimized_action,fixed,0.7304347826086957,0.7168955394066393,
+4,3,mlp,optimized_action,nested_tuned,0.7304347826086957,0.7168955394066393,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+4,3,svm,optimized_full,fixed,0.4782608695652174,0.4860165433694845,
+4,3,svm,optimized_full,nested_tuned,0.5130434782608696,0.5179090299021274,"{""model__C"": 5.0, ""model__gamma"": 0.1}"
+4,3,knn,optimized_full,fixed,0.40869565217391307,0.4124084085598864,
+4,3,knn,optimized_full,nested_tuned,0.3652173913043478,0.3776215298038148,"{""model__n_neighbors"": 5, ""model__weights"": ""distance""}"
+4,3,mlp,optimized_full,fixed,0.5391304347826087,0.5346832708553574,
+4,3,mlp,optimized_full,nested_tuned,0.4782608695652174,0.47065562065562067,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+5,3,svm,raw,fixed,0.3652173913043478,0.36146784015447614,
+5,3,svm,raw,nested_tuned,0.33043478260869563,0.3220847882335119,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+5,3,knn,raw,fixed,0.3217391304347826,0.291632179839727,
+5,3,knn,raw,nested_tuned,0.33043478260869563,0.3152989026443809,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+5,3,mlp,raw,fixed,0.391304347826087,0.38495010436186905,
+5,3,mlp,raw,nested_tuned,0.3826086956521739,0.37650206117698376,"{""model__alpha"": 0.01, ""model__hidden_layer_sizes"": [128, 64]}"
+5,3,svm,raw_pca11,fixed,0.5565217391304348,0.5622428111484199,
+5,3,svm,raw_pca11,nested_tuned,0.6086956521739131,0.6150314668825122,"{""model__C"": 10.0, ""model__gamma"": 0.01}"
+5,3,knn,raw_pca11,fixed,0.4608695652173913,0.47246758532472816,
+5,3,knn,raw_pca11,nested_tuned,0.45217391304347826,0.4552113600192404,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+5,3,mlp,raw_pca11,fixed,0.6086956521739131,0.6167461579226284,
+5,3,mlp,raw_pca11,nested_tuned,0.5826086956521739,0.5913737833165363,"{""model__alpha"": 0.001, ""model__hidden_layer_sizes"": [64, 32]}"
+5,3,svm,raw_pca17,fixed,0.5565217391304348,0.5542557301770324,
+5,3,svm,raw_pca17,nested_tuned,0.48695652173913045,0.4737435132243875,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+5,3,knn,raw_pca17,fixed,0.4782608695652174,0.4819593355083199,
+5,3,knn,raw_pca17,nested_tuned,0.4782608695652174,0.4869269551338095,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+5,3,mlp,raw_pca17,fixed,0.6695652173913044,0.6732417524024411,
+5,3,mlp,raw_pca17,nested_tuned,0.6434782608695652,0.6463046142172489,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+5,3,svm,joint_angle,fixed,0.7565217391304347,0.7555306628058512,
+5,3,svm,joint_angle,nested_tuned,0.7913043478260869,0.7907639157639159,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+5,3,knn,joint_angle,fixed,0.7217391304347827,0.727113824115048,
+5,3,knn,joint_angle,nested_tuned,0.7217391304347827,0.7311712785800819,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+5,3,mlp,joint_angle,fixed,0.7739130434782608,0.7783612764357309,
+5,3,mlp,joint_angle,nested_tuned,0.7565217391304347,0.7609673400952163,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+5,3,svm,corrected,fixed,0.7565217391304347,0.7616894942889237,
+5,3,svm,corrected,nested_tuned,0.7391304347826086,0.7449853449804621,"{""model__C"": 0.1, ""model__gamma"": 0.01}"
+5,3,knn,corrected,fixed,0.6608695652173913,0.6710324024840154,
+5,3,knn,corrected,nested_tuned,0.7391304347826086,0.7394175718389125,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+5,3,mlp,corrected,fixed,0.6782608695652174,0.6775241835320746,
+5,3,mlp,corrected,nested_tuned,0.7130434782608696,0.7113876064811279,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+5,3,svm,optimized_action,fixed,0.6695652173913044,0.6789415624474335,
+5,3,svm,optimized_action,nested_tuned,0.7391304347826086,0.7505915526510493,"{""model__C"": 0.1, ""model__gamma"": 0.01}"
+5,3,knn,optimized_action,fixed,0.7043478260869566,0.7034184318150046,
+5,3,knn,optimized_action,nested_tuned,0.6956521739130435,0.6957099957099957,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+5,3,mlp,optimized_action,fixed,0.6347826086956522,0.6307386796037596,
+5,3,mlp,optimized_action,nested_tuned,0.6347826086956522,0.6307386796037596,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+5,3,svm,optimized_full,fixed,0.34782608695652173,0.3360011545439551,
+5,3,svm,optimized_full,nested_tuned,0.3565217391304348,0.3515526858817423,"{""model__C"": 0.1, ""model__gamma"": 0.01}"
+5,3,knn,optimized_full,fixed,0.3652173913043478,0.3563200438200438,
+5,3,knn,optimized_full,nested_tuned,0.26956521739130435,0.2478346810422282,"{""model__n_neighbors"": 3, ""model__weights"": ""uniform""}"
+5,3,mlp,optimized_full,fixed,0.43478260869565216,0.4289766005597011,
+5,3,mlp,optimized_full,nested_tuned,0.391304347826087,0.39160333451160606,"{""model__alpha"": 0.01, ""model__hidden_layer_sizes"": [64]}"
+6,3,svm,raw,fixed,0.46956521739130436,0.453815349501624,
+6,3,svm,raw,nested_tuned,0.4434782608695652,0.4349978616387285,"{""model__C"": 0.1, ""model__gamma"": 0.01}"
+6,3,knn,raw,fixed,0.43478260869565216,0.41944799539260064,
+6,3,knn,raw,nested_tuned,0.3652173913043478,0.3581731953683174,"{""model__n_neighbors"": 9, ""model__weights"": ""distance""}"
+6,3,mlp,raw,fixed,0.5217391304347826,0.5045430102598887,
+6,3,mlp,raw,nested_tuned,0.5217391304347826,0.5045430102598887,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+6,3,svm,raw_pca11,fixed,0.6434782608695652,0.6413804224048966,
+6,3,svm,raw_pca11,nested_tuned,0.6260869565217392,0.6258547008547009,"{""model__C"": 0.1, ""model__gamma"": 0.01}"
+6,3,knn,raw_pca11,fixed,0.5739130434782609,0.5757731966398405,
+6,3,knn,raw_pca11,nested_tuned,0.5652173913043478,0.5616663152716284,"{""model__n_neighbors"": 7, ""model__weights"": ""distance""}"
+6,3,mlp,raw_pca11,fixed,0.6086956521739131,0.6058989115495462,
+6,3,mlp,raw_pca11,nested_tuned,0.5739130434782609,0.5779613819782564,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+6,3,svm,raw_pca17,fixed,0.6956521739130435,0.7254649081854964,
+6,3,svm,raw_pca17,nested_tuned,0.6695652173913044,0.6937752350515759,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+6,3,knn,raw_pca17,fixed,0.6608695652173913,0.6790472020073538,
+6,3,knn,raw_pca17,nested_tuned,0.48695652173913045,0.47088194414281376,"{""model__n_neighbors"": 9, ""model__weights"": ""distance""}"
+6,3,mlp,raw_pca17,fixed,0.6521739130434783,0.669469785230933,
+6,3,mlp,raw_pca17,nested_tuned,0.6521739130434783,0.669469785230933,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+6,3,svm,joint_angle,fixed,0.6956521739130435,0.7035124169939196,
+6,3,svm,joint_angle,nested_tuned,0.6,0.5771252528034515,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+6,3,knn,joint_angle,fixed,0.7217391304347827,0.7278916874119273,
+6,3,knn,joint_angle,nested_tuned,0.7478260869565218,0.752382725185098,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+6,3,mlp,joint_angle,fixed,0.7304347826086957,0.7378741610993753,
+6,3,mlp,joint_angle,nested_tuned,0.7304347826086957,0.7378741610993753,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+6,3,svm,corrected,fixed,0.7130434782608696,0.7286696454153759,
+6,3,svm,corrected,nested_tuned,0.6521739130434783,0.6314451977561734,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+6,3,knn,corrected,fixed,0.7304347826086957,0.7312064347404276,
+6,3,knn,corrected,nested_tuned,0.6869565217391305,0.6926212395074574,"{""model__n_neighbors"": 3, ""model__weights"": ""uniform""}"
+6,3,mlp,corrected,fixed,0.7304347826086957,0.7277412085830655,
+6,3,mlp,corrected,nested_tuned,0.6347826086956522,0.6350602189417979,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+6,3,svm,optimized_action,fixed,0.6782608695652174,0.6962427174879036,
+6,3,svm,optimized_action,nested_tuned,0.5652173913043478,0.5256405152956878,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+6,3,knn,optimized_action,fixed,0.7217391304347827,0.725038714672861,
+6,3,knn,optimized_action,nested_tuned,0.6782608695652174,0.6839628089628089,"{""model__n_neighbors"": 3, ""model__weights"": ""uniform""}"
+6,3,mlp,optimized_action,fixed,0.7130434782608696,0.7068450288314465,
+6,3,mlp,optimized_action,nested_tuned,0.6434782608695652,0.6383404450494893,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+6,3,svm,optimized_full,fixed,0.4782608695652174,0.49433001708543506,
+6,3,svm,optimized_full,nested_tuned,0.41739130434782606,0.43855892432430427,"{""model__C"": 1.0, ""model__gamma"": 0.01}"
+6,3,knn,optimized_full,fixed,0.43478260869565216,0.4382946856631067,
+6,3,knn,optimized_full,nested_tuned,0.4434782608695652,0.44465349465349463,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+6,3,mlp,optimized_full,fixed,0.5304347826086957,0.5364092949458803,
+6,3,mlp,optimized_full,nested_tuned,0.5304347826086957,0.5364092949458803,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+7,3,svm,raw,fixed,0.3826086956521739,0.35607085634242064,
+7,3,svm,raw,nested_tuned,0.3391304347826087,0.3284519168291098,"{""model__C"": 0.1, ""model__gamma"": 0.1}"
+7,3,knn,raw,fixed,0.30434782608695654,0.29552703455142476,
+7,3,knn,raw,nested_tuned,0.2956521739130435,0.26965435599844195,"{""model__n_neighbors"": 5, ""model__weights"": ""distance""}"
+7,3,mlp,raw,fixed,0.3652173913043478,0.3470286830321574,
+7,3,mlp,raw,nested_tuned,0.4,0.3993325883620675,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+7,3,svm,raw_pca11,fixed,0.6,0.6083842083842084,
+7,3,svm,raw_pca11,nested_tuned,0.5217391304347826,0.5065592903828198,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+7,3,knn,raw_pca11,fixed,0.5478260869565217,0.5529467904797883,
+7,3,knn,raw_pca11,nested_tuned,0.5739130434782609,0.5761710131729108,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+7,3,mlp,raw_pca11,fixed,0.591304347826087,0.5920335603841386,
+7,3,mlp,raw_pca11,nested_tuned,0.6347826086956522,0.6414955773146858,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+7,3,svm,raw_pca17,fixed,0.6695652173913044,0.6709885594294197,
+7,3,svm,raw_pca17,nested_tuned,0.6608695652173913,0.6657203421909305,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+7,3,knn,raw_pca17,fixed,0.6347826086956522,0.6344272844272844,
+7,3,knn,raw_pca17,nested_tuned,0.6347826086956522,0.6344272844272844,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+7,3,mlp,raw_pca17,fixed,0.6782608695652174,0.6788876650867864,
+7,3,mlp,raw_pca17,nested_tuned,0.6782608695652174,0.6788876650867864,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+7,3,svm,joint_angle,fixed,0.7391304347826086,0.7469413234119117,
+7,3,svm,joint_angle,nested_tuned,0.7478260869565218,0.755501443001443,"{""model__C"": 5.0, ""model__gamma"": 0.01}"
+7,3,knn,joint_angle,fixed,0.6086956521739131,0.6137254901960784,
+7,3,knn,joint_angle,nested_tuned,0.7391304347826086,0.7466186540629516,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+7,3,mlp,joint_angle,fixed,0.6782608695652174,0.6883812827835599,
+7,3,mlp,joint_angle,nested_tuned,0.6608695652173913,0.6697042997710455,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+7,3,svm,corrected,fixed,0.6695652173913044,0.6616958444929724,
+7,3,svm,corrected,nested_tuned,0.6869565217391305,0.6769348682208567,"{""model__C"": 5.0, ""model__gamma"": ""auto""}"
+7,3,knn,corrected,fixed,0.6434782608695652,0.6222307104660046,
+7,3,knn,corrected,nested_tuned,0.6869565217391305,0.6911778078209392,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+7,3,mlp,corrected,fixed,0.6521739130434783,0.629469696969697,
+7,3,mlp,corrected,nested_tuned,0.6521739130434783,0.629469696969697,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+7,3,svm,optimized_action,fixed,0.7043478260869566,0.6957499150738684,
+7,3,svm,optimized_action,nested_tuned,0.7043478260869566,0.6957499150738684,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+7,3,knn,optimized_action,fixed,0.6521739130434783,0.6431780208095997,
+7,3,knn,optimized_action,nested_tuned,0.6521739130434783,0.6431780208095997,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+7,3,mlp,optimized_action,fixed,0.7043478260869566,0.7057191628720338,
+7,3,mlp,optimized_action,nested_tuned,0.7043478260869566,0.7057191628720338,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+7,3,svm,optimized_full,fixed,0.3826086956521739,0.37467595757069444,
+7,3,svm,optimized_full,nested_tuned,0.391304347826087,0.4054884233191825,"{""model__C"": 0.1, ""model__gamma"": 0.01}"
+7,3,knn,optimized_full,fixed,0.3652173913043478,0.35472088821649433,
+7,3,knn,optimized_full,nested_tuned,0.4,0.40158172477013054,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+7,3,mlp,optimized_full,fixed,0.34782608695652173,0.3188285291943828,
+7,3,mlp,optimized_full,nested_tuned,0.34782608695652173,0.3188285291943828,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+8,3,svm,raw,fixed,0.3652173913043478,0.3481407971029144,
+8,3,svm,raw,nested_tuned,0.30434782608695654,0.31232992390887127,"{""model__C"": 0.1, ""model__gamma"": 0.1}"
+8,3,knn,raw,fixed,0.3739130434782609,0.36310264199464765,
+8,3,knn,raw,nested_tuned,0.3739130434782609,0.36310264199464765,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+8,3,mlp,raw,fixed,0.3739130434782609,0.37613530549577057,
+8,3,mlp,raw,nested_tuned,0.3826086956521739,0.3571669071669072,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+8,3,svm,raw_pca11,fixed,0.591304347826087,0.589324287245167,
+8,3,svm,raw_pca11,nested_tuned,0.4608695652173913,0.4500728695551333,"{""model__C"": 5.0, ""model__gamma"": 0.1}"
+8,3,knn,raw_pca11,fixed,0.5130434782608696,0.5010714285714285,
+8,3,knn,raw_pca11,nested_tuned,0.5652173913043478,0.556263482734071,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+8,3,mlp,raw_pca11,fixed,0.6173913043478261,0.5938503431931136,
+8,3,mlp,raw_pca11,nested_tuned,0.6521739130434783,0.6590087370745893,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+8,3,svm,raw_pca17,fixed,0.6347826086956522,0.6339629524222549,
+8,3,svm,raw_pca17,nested_tuned,0.43478260869565216,0.39236761204724596,"{""model__C"": 1.0, ""model__gamma"": 1.0}"
+8,3,knn,raw_pca17,fixed,0.6173913043478261,0.6005104996557412,
+8,3,knn,raw_pca17,nested_tuned,0.6956521739130435,0.6839086930620111,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+8,3,mlp,raw_pca17,fixed,0.6869565217391305,0.6616565545136973,
+8,3,mlp,raw_pca17,nested_tuned,0.6434782608695652,0.6310643713387388,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+8,3,svm,joint_angle,fixed,0.7913043478260869,0.7754656196516662,
+8,3,svm,joint_angle,nested_tuned,0.7043478260869566,0.681136785052061,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+8,3,knn,joint_angle,fixed,0.6782608695652174,0.6729583803752601,
+8,3,knn,joint_angle,nested_tuned,0.7130434782608696,0.7107811943950647,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+8,3,mlp,joint_angle,fixed,0.7913043478260869,0.7884451314224233,
+8,3,mlp,joint_angle,nested_tuned,0.7913043478260869,0.7884451314224233,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+8,3,svm,corrected,fixed,0.7739130434782608,0.7790018317352212,
+8,3,svm,corrected,nested_tuned,0.7739130434782608,0.7790018317352212,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+8,3,knn,corrected,fixed,0.591304347826087,0.5571482599678088,
+8,3,knn,corrected,nested_tuned,0.6869565217391305,0.6727960977681021,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+8,3,mlp,corrected,fixed,0.808695652173913,0.8073573954192331,
+8,3,mlp,corrected,nested_tuned,0.7652173913043478,0.7649105872790084,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+8,3,svm,optimized_action,fixed,0.6956521739130435,0.6955962521853994,
+8,3,svm,optimized_action,nested_tuned,0.6956521739130435,0.6955962521853994,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+8,3,knn,optimized_action,fixed,0.6173913043478261,0.5797261083114474,
+8,3,knn,optimized_action,nested_tuned,0.7043478260869566,0.6922094014301275,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+8,3,mlp,optimized_action,fixed,0.7913043478260869,0.7854174026988782,
+8,3,mlp,optimized_action,nested_tuned,0.7217391304347827,0.7125395161305051,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+8,3,svm,optimized_full,fixed,0.5217391304347826,0.5007833436404865,
+8,3,svm,optimized_full,nested_tuned,0.4956521739130435,0.5022450273359486,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+8,3,knn,optimized_full,fixed,0.4956521739130435,0.5008882428940569,
+8,3,knn,optimized_full,nested_tuned,0.46956521739130436,0.4698441649623004,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+8,3,mlp,optimized_full,fixed,0.4956521739130435,0.48826638016396445,
+8,3,mlp,optimized_full,nested_tuned,0.5391304347826087,0.522630370906233,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+9,3,svm,raw,fixed,0.33043478260869563,0.3300689190933094,
+9,3,svm,raw,nested_tuned,0.2956521739130435,0.295930121409661,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+9,3,knn,raw,fixed,0.30434782608695654,0.30305542364365895,
+9,3,knn,raw,nested_tuned,0.30434782608695654,0.30305542364365895,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+9,3,mlp,raw,fixed,0.3652173913043478,0.36170055997642203,
+9,3,mlp,raw,nested_tuned,0.3652173913043478,0.36170055997642203,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+9,3,svm,raw_pca11,fixed,0.5130434782608696,0.5259493602351848,
+9,3,svm,raw_pca11,nested_tuned,0.46956521739130436,0.48083093660373866,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+9,3,knn,raw_pca11,fixed,0.4956521739130435,0.4716521751562182,
+9,3,knn,raw_pca11,nested_tuned,0.4956521739130435,0.4716521751562182,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+9,3,mlp,raw_pca11,fixed,0.6,0.6021370694238208,
+9,3,mlp,raw_pca11,nested_tuned,0.5652173913043478,0.5634601330440642,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+9,3,svm,raw_pca17,fixed,0.5652173913043478,0.5727727406752174,
+9,3,svm,raw_pca17,nested_tuned,0.5652173913043478,0.5727727406752174,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+9,3,knn,raw_pca17,fixed,0.5826086956521739,0.5733597528655668,
+9,3,knn,raw_pca17,nested_tuned,0.5565217391304348,0.5475040257648954,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+9,3,mlp,raw_pca17,fixed,0.6521739130434783,0.6460126177432872,
+9,3,mlp,raw_pca17,nested_tuned,0.6521739130434783,0.6460126177432872,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+9,3,svm,joint_angle,fixed,0.7478260869565218,0.7487081501616385,
+9,3,svm,joint_angle,nested_tuned,0.6782608695652174,0.6734419574281326,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+9,3,knn,joint_angle,fixed,0.591304347826087,0.5820850273735868,
+9,3,knn,joint_angle,nested_tuned,0.6608695652173913,0.6444212232937723,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+9,3,mlp,joint_angle,fixed,0.7565217391304347,0.7451124894402206,
+9,3,mlp,joint_angle,nested_tuned,0.8,0.8008250794515236,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+9,3,svm,corrected,fixed,0.6956521739130435,0.692155756241343,
+9,3,svm,corrected,nested_tuned,0.4434782608695652,0.3928222089487157,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+9,3,knn,corrected,fixed,0.6086956521739131,0.5796852329531151,
+9,3,knn,corrected,nested_tuned,0.6608695652173913,0.629646687734923,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+9,3,mlp,corrected,fixed,0.7304347826086957,0.720104739716406,
+9,3,mlp,corrected,nested_tuned,0.7391304347826086,0.7413904432922817,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+9,3,svm,optimized_action,fixed,0.7130434782608696,0.7119997538089193,
+9,3,svm,optimized_action,nested_tuned,0.5826086956521739,0.5670151924099293,"{""model__C"": 0.1, ""model__gamma"": 0.01}"
+9,3,knn,optimized_action,fixed,0.5652173913043478,0.5609778436297065,
+9,3,knn,optimized_action,nested_tuned,0.5304347826086957,0.48728207782555605,"{""model__n_neighbors"": 9, ""model__weights"": ""distance""}"
+9,3,mlp,optimized_action,fixed,0.7304347826086957,0.7283718991036064,
+9,3,mlp,optimized_action,nested_tuned,0.7304347826086957,0.7283718991036064,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+9,3,svm,optimized_full,fixed,0.3739130434782609,0.3902017170959407,
+9,3,svm,optimized_full,nested_tuned,0.3826086956521739,0.3839410118052389,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+9,3,knn,optimized_full,fixed,0.3652173913043478,0.3678481733766286,
+9,3,knn,optimized_full,nested_tuned,0.3130434782608696,0.29088390015518556,"{""model__n_neighbors"": 9, ""model__weights"": ""distance""}"
+9,3,mlp,optimized_full,fixed,0.3565217391304348,0.37245071561156307,
+9,3,mlp,optimized_full,nested_tuned,0.3652173913043478,0.36719008812032067,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+10,3,svm,raw,fixed,0.3391304347826087,0.2941863834667433,
+10,3,svm,raw,nested_tuned,0.3391304347826087,0.2941863834667433,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+10,3,knn,raw,fixed,0.30434782608695654,0.28329032169810137,
+10,3,knn,raw,nested_tuned,0.2956521739130435,0.26234124425613786,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+10,3,mlp,raw,fixed,0.3217391304347826,0.2838272725133027,
+10,3,mlp,raw,nested_tuned,0.3217391304347826,0.2838272725133027,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+10,3,svm,raw_pca11,fixed,0.5826086956521739,0.5846055648282992,
+10,3,svm,raw_pca11,nested_tuned,0.5826086956521739,0.5821404247925644,"{""model__C"": 0.1, ""model__gamma"": 0.01}"
+10,3,knn,raw_pca11,fixed,0.5391304347826087,0.5163150257375181,
+10,3,knn,raw_pca11,nested_tuned,0.5565217391304348,0.5493762688354417,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+10,3,mlp,raw_pca11,fixed,0.6434782608695652,0.6303329029235989,
+10,3,mlp,raw_pca11,nested_tuned,0.6434782608695652,0.6303329029235989,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+10,3,svm,raw_pca17,fixed,0.6086956521739131,0.6096275398636893,
+10,3,svm,raw_pca17,nested_tuned,0.3652173913043478,0.376585078668412,"{""model__C"": 5.0, ""model__gamma"": 0.1}"
+10,3,knn,raw_pca17,fixed,0.591304347826087,0.577393373045547,
+10,3,knn,raw_pca17,nested_tuned,0.6,0.5880702932333367,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+10,3,mlp,raw_pca17,fixed,0.6260869565217392,0.6157265057504269,
+10,3,mlp,raw_pca17,nested_tuned,0.6173913043478261,0.6108863457267713,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+10,3,svm,joint_angle,fixed,0.6434782608695652,0.65308168533975,
+10,3,svm,joint_angle,nested_tuned,0.6086956521739131,0.6117864488216826,"{""model__C"": 0.1, ""model__gamma"": 0.01}"
+10,3,knn,joint_angle,fixed,0.6608695652173913,0.6657435852482291,
+10,3,knn,joint_angle,nested_tuned,0.6608695652173913,0.6657435852482291,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+10,3,mlp,joint_angle,fixed,0.7217391304347827,0.7263963329763156,
+10,3,mlp,joint_angle,nested_tuned,0.7130434782608696,0.7105293330261239,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+10,3,svm,corrected,fixed,0.7304347826086957,0.7258620431964188,
+10,3,svm,corrected,nested_tuned,0.6608695652173913,0.6385384942856207,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+10,3,knn,corrected,fixed,0.6434782608695652,0.6445530606099712,
+10,3,knn,corrected,nested_tuned,0.5130434782608696,0.5013791308873277,"{""model__n_neighbors"": 9, ""model__weights"": ""distance""}"
+10,3,mlp,corrected,fixed,0.7130434782608696,0.7126509233431104,
+10,3,mlp,corrected,nested_tuned,0.7391304347826086,0.7267102117645595,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+10,3,svm,optimized_action,fixed,0.7391304347826086,0.7411154225178617,
+10,3,svm,optimized_action,nested_tuned,0.7304347826086957,0.7321621755445286,"{""model__C"": 5.0, ""model__gamma"": 0.01}"
+10,3,knn,optimized_action,fixed,0.6782608695652174,0.6724247637543895,
+10,3,knn,optimized_action,nested_tuned,0.6782608695652174,0.6724247637543895,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+10,3,mlp,optimized_action,fixed,0.7652173913043478,0.7658257611987885,
+10,3,mlp,optimized_action,nested_tuned,0.6869565217391305,0.6833217833217834,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+10,3,svm,optimized_full,fixed,0.4434782608695652,0.45086462509199476,
+10,3,svm,optimized_full,nested_tuned,0.4434782608695652,0.45086462509199476,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+10,3,knn,optimized_full,fixed,0.3565217391304348,0.35970355382120095,
+10,3,knn,optimized_full,nested_tuned,0.24347826086956523,0.20847818752567035,"{""model__n_neighbors"": 3, ""model__weights"": ""uniform""}"
+10,3,mlp,optimized_full,fixed,0.43478260869565216,0.4349935195523431,
+10,3,mlp,optimized_full,nested_tuned,0.4434782608695652,0.4397635130607267,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+11,3,svm,raw,fixed,0.391304347826087,0.3728822334645403,
+11,3,svm,raw,nested_tuned,0.3217391304347826,0.3030063574539902,"{""model__C"": 0.1, ""model__gamma"": 0.01}"
+11,3,knn,raw,fixed,0.26956521739130435,0.2541480156612432,
+11,3,knn,raw,nested_tuned,0.22608695652173913,0.22976333210131408,"{""model__n_neighbors"": 9, ""model__weights"": ""distance""}"
+11,3,mlp,raw,fixed,0.391304347826087,0.38035958035958034,
+11,3,mlp,raw,nested_tuned,0.33043478260869563,0.32271912565044975,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+11,3,svm,raw_pca11,fixed,0.6521739130434783,0.6823292414852481,
+11,3,svm,raw_pca11,nested_tuned,0.6521739130434783,0.6743018334069649,"{""model__C"": 5.0, ""model__gamma"": 0.01}"
+11,3,knn,raw_pca11,fixed,0.6782608695652174,0.6770590231062984,
+11,3,knn,raw_pca11,nested_tuned,0.6782608695652174,0.6770590231062984,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+11,3,mlp,raw_pca11,fixed,0.7130434782608696,0.7180584121760593,
+11,3,mlp,raw_pca11,nested_tuned,0.6086956521739131,0.6171219847690436,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+11,3,svm,raw_pca17,fixed,0.6869565217391305,0.7082097114280318,
+11,3,svm,raw_pca17,nested_tuned,0.6260869565217392,0.6281022390677121,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+11,3,knn,raw_pca17,fixed,0.6086956521739131,0.6117343304843305,
+11,3,knn,raw_pca17,nested_tuned,0.6260869565217392,0.6281022390677121,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+11,3,mlp,raw_pca17,fixed,0.7043478260869566,0.7167732804765129,
+11,3,mlp,raw_pca17,nested_tuned,0.591304347826087,0.590159083182339,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+11,3,svm,joint_angle,fixed,0.8,0.8066108507284979,
+11,3,svm,joint_angle,nested_tuned,0.8,0.8066108507284979,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+11,3,knn,joint_angle,fixed,0.6782608695652174,0.6893178893178894,
+11,3,knn,joint_angle,nested_tuned,0.7913043478260869,0.7981773546069032,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+11,3,mlp,joint_angle,fixed,0.7913043478260869,0.791183876917191,
+11,3,mlp,joint_angle,nested_tuned,0.7565217391304347,0.7585645909649291,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+11,3,svm,corrected,fixed,0.782608695652174,0.7835053565736083,
+11,3,svm,corrected,nested_tuned,0.5391304347826087,0.5451006441223832,"{""model__C"": 1.0, ""model__gamma"": 1.0}"
+11,3,knn,corrected,fixed,0.7391304347826086,0.7439368350469633,
+11,3,knn,corrected,nested_tuned,0.6608695652173913,0.6617182005940179,"{""model__n_neighbors"": 5, ""model__weights"": ""distance""}"
+11,3,mlp,corrected,fixed,0.782608695652174,0.7805596069326047,
+11,3,mlp,corrected,nested_tuned,0.782608695652174,0.7805596069326047,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+11,3,svm,optimized_action,fixed,0.782608695652174,0.7848611128228091,
+11,3,svm,optimized_action,nested_tuned,0.782608695652174,0.7848611128228091,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+11,3,knn,optimized_action,fixed,0.7217391304347827,0.7213909907768357,
+11,3,knn,optimized_action,nested_tuned,0.782608695652174,0.7829852408799778,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+11,3,mlp,optimized_action,fixed,0.782608695652174,0.7842809769527862,
+11,3,mlp,optimized_action,nested_tuned,0.7739130434782608,0.772419563950221,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+11,3,svm,optimized_full,fixed,0.5217391304347826,0.5203957318327638,
+11,3,svm,optimized_full,nested_tuned,0.5304347826086957,0.5281967681967682,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+11,3,knn,optimized_full,fixed,0.5217391304347826,0.5102020793426031,
+11,3,knn,optimized_full,nested_tuned,0.4956521739130435,0.4777937191136617,"{""model__n_neighbors"": 5, ""model__weights"": ""distance""}"
+11,3,mlp,optimized_full,fixed,0.5652173913043478,0.5610649842073991,
+11,3,mlp,optimized_full,nested_tuned,0.5652173913043478,0.5610649842073991,"{""model__alpha"": 0.01, ""model__hidden_layer_sizes"": [128, 64]}"
+12,3,svm,raw,fixed,0.3739130434782609,0.3636900918829416,
+12,3,svm,raw,nested_tuned,0.34782608695652173,0.33747510800718156,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+12,3,knn,raw,fixed,0.3217391304347826,0.31052259741567306,
+12,3,knn,raw,nested_tuned,0.34782608695652173,0.3320639556920045,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+12,3,mlp,raw,fixed,0.40869565217391307,0.3909283615165968,
+12,3,mlp,raw,nested_tuned,0.391304347826087,0.3736793073234967,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+12,3,svm,raw_pca11,fixed,0.4782608695652174,0.4805656581629067,
+12,3,svm,raw_pca11,nested_tuned,0.48695652173913045,0.46978292651919645,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+12,3,knn,raw_pca11,fixed,0.4608695652173913,0.46661009738332004,
+12,3,knn,raw_pca11,nested_tuned,0.46956521739130436,0.4714065345016847,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+12,3,mlp,raw_pca11,fixed,0.4782608695652174,0.47088101956523004,
+12,3,mlp,raw_pca11,nested_tuned,0.45217391304347826,0.44651433837480353,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+12,3,svm,raw_pca17,fixed,0.4782608695652174,0.47024269827241544,
+12,3,svm,raw_pca17,nested_tuned,0.33043478260869563,0.3060978835978836,"{""model__C"": 0.1, ""model__gamma"": 0.1}"
+12,3,knn,raw_pca17,fixed,0.4608695652173913,0.46773102965053437,
+12,3,knn,raw_pca17,nested_tuned,0.5043478260869565,0.505974492564106,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+12,3,mlp,raw_pca17,fixed,0.4956521739130435,0.4844003668576051,
+12,3,mlp,raw_pca17,nested_tuned,0.4956521739130435,0.469657434487943,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+12,3,svm,joint_angle,fixed,0.5826086956521739,0.5864723804239933,
+12,3,svm,joint_angle,nested_tuned,0.5826086956521739,0.5864723804239933,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+12,3,knn,joint_angle,fixed,0.6347826086956522,0.6439215222137071,
+12,3,knn,joint_angle,nested_tuned,0.6086956521739131,0.6073737925969608,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+12,3,mlp,joint_angle,fixed,0.6,0.5913934981639408,
+12,3,mlp,joint_angle,nested_tuned,0.6,0.5913934981639408,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+12,3,svm,corrected,fixed,0.6608695652173913,0.663256156027841,
+12,3,svm,corrected,nested_tuned,0.5652173913043478,0.5552257266542981,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+12,3,knn,corrected,fixed,0.591304347826087,0.5694215378007956,
+12,3,knn,corrected,nested_tuned,0.6086956521739131,0.5856994974692082,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+12,3,mlp,corrected,fixed,0.591304347826087,0.5840270484044553,
+12,3,mlp,corrected,nested_tuned,0.591304347826087,0.5791791791791793,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+12,3,svm,optimized_action,fixed,0.6173913043478261,0.5961129397393838,
+12,3,svm,optimized_action,nested_tuned,0.6347826086956522,0.6196675659410689,"{""model__C"": 5.0, ""model__gamma"": 0.01}"
+12,3,knn,optimized_action,fixed,0.6,0.5698638059736458,
+12,3,knn,optimized_action,nested_tuned,0.6347826086956522,0.5959430432644611,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+12,3,mlp,optimized_action,fixed,0.5826086956521739,0.554857202418178,
+12,3,mlp,optimized_action,nested_tuned,0.6,0.5830486317796465,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+12,3,svm,optimized_full,fixed,0.46956521739130436,0.47016326073894216,
+12,3,svm,optimized_full,nested_tuned,0.46956521739130436,0.47016326073894216,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+12,3,knn,optimized_full,fixed,0.43478260869565216,0.4201941629339838,
+12,3,knn,optimized_full,nested_tuned,0.391304347826087,0.3703558460421206,"{""model__n_neighbors"": 3, ""model__weights"": ""uniform""}"
+12,3,mlp,optimized_full,fixed,0.4260869565217391,0.39299017997607183,
+12,3,mlp,optimized_full,nested_tuned,0.4434782608695652,0.44142335291008833,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+13,3,svm,raw,fixed,0.3739130434782609,0.3612762706965605,
+13,3,svm,raw,nested_tuned,0.33043478260869563,0.313609874316563,"{""model__C"": 5.0, ""model__gamma"": 0.1}"
+13,3,knn,raw,fixed,0.3826086956521739,0.37414410208527854,
+13,3,knn,raw,nested_tuned,0.3739130434782609,0.36729830055394247,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+13,3,mlp,raw,fixed,0.3739130434782609,0.36435293101959765,
+13,3,mlp,raw,nested_tuned,0.34782608695652173,0.32352588782526936,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+13,3,svm,raw_pca11,fixed,0.591304347826087,0.5982595997232513,
+13,3,svm,raw_pca11,nested_tuned,0.5478260869565217,0.5585761990732078,"{""model__C"": 0.1, ""model__gamma"": 0.1}"
+13,3,knn,raw_pca11,fixed,0.591304347826087,0.5873667699899033,
+13,3,knn,raw_pca11,nested_tuned,0.591304347826087,0.5873667699899033,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+13,3,mlp,raw_pca11,fixed,0.6434782608695652,0.6432370189485939,
+13,3,mlp,raw_pca11,nested_tuned,0.6434782608695652,0.6432370189485939,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+13,3,svm,raw_pca17,fixed,0.6956521739130435,0.6970764208326786,
+13,3,svm,raw_pca17,nested_tuned,0.7043478260869566,0.7047262252468914,"{""model__C"": 5.0, ""model__gamma"": 0.01}"
+13,3,knn,raw_pca17,fixed,0.6521739130434783,0.6646065124788528,
+13,3,knn,raw_pca17,nested_tuned,0.6521739130434783,0.6646065124788528,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+13,3,mlp,raw_pca17,fixed,0.6608695652173913,0.6527376625077773,
+13,3,mlp,raw_pca17,nested_tuned,0.6782608695652174,0.6772643837369396,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+13,3,svm,joint_angle,fixed,0.7913043478260869,0.790931306899543,
+13,3,svm,joint_angle,nested_tuned,0.7913043478260869,0.790931306899543,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+13,3,knn,joint_angle,fixed,0.7391304347826086,0.7396594805263536,
+13,3,knn,joint_angle,nested_tuned,0.6521739130434783,0.6300605617741168,"{""model__n_neighbors"": 9, ""model__weights"": ""distance""}"
+13,3,mlp,joint_angle,fixed,0.7652173913043478,0.7677387635086111,
+13,3,mlp,joint_angle,nested_tuned,0.7304347826086957,0.7184461166661223,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+13,3,svm,corrected,fixed,0.7739130434782608,0.7727167432370181,
+13,3,svm,corrected,nested_tuned,0.6521739130434783,0.6446003508895006,"{""model__C"": 1.0, ""model__gamma"": 0.01}"
+13,3,knn,corrected,fixed,0.6434782608695652,0.6384408602150539,
+13,3,knn,corrected,nested_tuned,0.5391304347826087,0.50843370062437,"{""model__n_neighbors"": 9, ""model__weights"": ""distance""}"
+13,3,mlp,corrected,fixed,0.7043478260869566,0.7082209087468555,
+13,3,mlp,corrected,nested_tuned,0.7043478260869566,0.7082209087468555,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+13,3,svm,optimized_action,fixed,0.7565217391304347,0.7565225329901826,
+13,3,svm,optimized_action,nested_tuned,0.6347826086956522,0.6318431568431568,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+13,3,knn,optimized_action,fixed,0.6695652173913044,0.6573078769702404,
+13,3,knn,optimized_action,nested_tuned,0.7217391304347827,0.7143817651626808,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+13,3,mlp,optimized_action,fixed,0.7478260869565218,0.7498200886704004,
+13,3,mlp,optimized_action,nested_tuned,0.7478260869565218,0.7498200886704004,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+13,3,svm,optimized_full,fixed,0.4260869565217391,0.41697489390662684,
+13,3,svm,optimized_full,nested_tuned,0.4260869565217391,0.41697489390662684,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+13,3,knn,optimized_full,fixed,0.4260869565217391,0.40357569503080337,
+13,3,knn,optimized_full,nested_tuned,0.4434782608695652,0.41223300185948736,"{""model__n_neighbors"": 7, ""model__weights"": ""distance""}"
+13,3,mlp,optimized_full,fixed,0.4782608695652174,0.4520438072324864,
+13,3,mlp,optimized_full,nested_tuned,0.391304347826087,0.38704182527711933,"{""model__alpha"": 0.01, ""model__hidden_layer_sizes"": [32]}"
+14,3,svm,raw,fixed,0.40869565217391307,0.4083498858890849,
+14,3,svm,raw,nested_tuned,0.34782608695652173,0.3278370086880725,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+14,3,knn,raw,fixed,0.40869565217391307,0.39409098802747566,
+14,3,knn,raw,nested_tuned,0.4434782608695652,0.4275277045391988,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+14,3,mlp,raw,fixed,0.45217391304347826,0.42134089320247314,
+14,3,mlp,raw,nested_tuned,0.391304347826087,0.3636522035409801,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+14,3,svm,raw_pca11,fixed,0.6,0.6054649740141981,
+14,3,svm,raw_pca11,nested_tuned,0.4956521739130435,0.48417987004943525,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+14,3,knn,raw_pca11,fixed,0.46956521739130436,0.4515898826243654,
+14,3,knn,raw_pca11,nested_tuned,0.4956521739130435,0.48738143176262777,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+14,3,mlp,raw_pca11,fixed,0.5478260869565217,0.5541303098774363,
+14,3,mlp,raw_pca11,nested_tuned,0.5478260869565217,0.5541303098774363,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+14,3,svm,raw_pca17,fixed,0.6521739130434783,0.6682187660010239,
+14,3,svm,raw_pca17,nested_tuned,0.5478260869565217,0.5441885499622765,"{""model__C"": 0.1, ""model__gamma"": 0.01}"
+14,3,knn,raw_pca17,fixed,0.3826086956521739,0.3506224784859661,
+14,3,knn,raw_pca17,nested_tuned,0.5217391304347826,0.5032806324110671,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+14,3,mlp,raw_pca17,fixed,0.591304347826087,0.599215078797656,
+14,3,mlp,raw_pca17,nested_tuned,0.5391304347826087,0.5484765467180569,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+14,3,svm,joint_angle,fixed,0.7565217391304347,0.7528044419157441,
+14,3,svm,joint_angle,nested_tuned,0.7478260869565218,0.7420491799663403,"{""model__C"": 5.0, ""model__gamma"": 0.01}"
+14,3,knn,joint_angle,fixed,0.591304347826087,0.5920055054463657,
+14,3,knn,joint_angle,nested_tuned,0.591304347826087,0.5920055054463657,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+14,3,mlp,joint_angle,fixed,0.7043478260869566,0.7040902802787352,
+14,3,mlp,joint_angle,nested_tuned,0.7130434782608696,0.7119608462617869,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+14,3,svm,corrected,fixed,0.7565217391304347,0.7621279717560784,
+14,3,svm,corrected,nested_tuned,0.5826086956521739,0.5385946363345622,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+14,3,knn,corrected,fixed,0.6782608695652174,0.6872978407203427,
+14,3,knn,corrected,nested_tuned,0.6695652173913044,0.6813627366443006,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+14,3,mlp,corrected,fixed,0.6869565217391305,0.6909740681670505,
+14,3,mlp,corrected,nested_tuned,0.6260869565217392,0.6293467272429405,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+14,3,svm,optimized_action,fixed,0.7304347826086957,0.7391469038208168,
+14,3,svm,optimized_action,nested_tuned,0.5739130434782609,0.5850808222477227,"{""model__C"": 0.1, ""model__gamma"": 0.1}"
+14,3,knn,optimized_action,fixed,0.6869565217391305,0.6814912258877777,
+14,3,knn,optimized_action,nested_tuned,0.6956521739130435,0.6918566240214666,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+14,3,mlp,optimized_action,fixed,0.7043478260869566,0.7099472537553032,
+14,3,mlp,optimized_action,nested_tuned,0.6347826086956522,0.6274658869395712,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+14,3,svm,optimized_full,fixed,0.4782608695652174,0.44677803677803674,
+14,3,svm,optimized_full,nested_tuned,0.3652173913043478,0.3614799151762436,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+14,3,knn,optimized_full,fixed,0.33043478260869563,0.31409342677146274,
+14,3,knn,optimized_full,nested_tuned,0.3565217391304348,0.35074759194392047,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+14,3,mlp,optimized_full,fixed,0.5130434782608696,0.5012210968732708,
+14,3,mlp,optimized_full,nested_tuned,0.43478260869565216,0.42718253968253966,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+15,3,svm,raw,fixed,0.3739130434782609,0.37776364667257245,
+15,3,svm,raw,nested_tuned,0.3739130434782609,0.37776364667257245,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+15,3,knn,raw,fixed,0.3130434782608696,0.2946042400040246,
+15,3,knn,raw,nested_tuned,0.33043478260869563,0.29547827903091056,"{""model__n_neighbors"": 7, ""model__weights"": ""distance""}"
+15,3,mlp,raw,fixed,0.3565217391304348,0.34889627675530394,
+15,3,mlp,raw,nested_tuned,0.3826086956521739,0.3821954724707534,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+15,3,svm,raw_pca11,fixed,0.5217391304347826,0.524953894177477,
+15,3,svm,raw_pca11,nested_tuned,0.5130434782608696,0.49469696969696964,"{""model__C"": 0.1, ""model__gamma"": 0.01}"
+15,3,knn,raw_pca11,fixed,0.4956521739130435,0.4912027451882524,
+15,3,knn,raw_pca11,nested_tuned,0.5043478260869565,0.48670302625464196,"{""model__n_neighbors"": 5, ""model__weights"": ""distance""}"
+15,3,mlp,raw_pca11,fixed,0.4782608695652174,0.47371488892139707,
+15,3,mlp,raw_pca11,nested_tuned,0.5391304347826087,0.5340427092024073,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+15,3,svm,raw_pca17,fixed,0.6086956521739131,0.6170860891677975,
+15,3,svm,raw_pca17,nested_tuned,0.46956521739130436,0.38520394158981114,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+15,3,knn,raw_pca17,fixed,0.6,0.5959558821674139,
+15,3,knn,raw_pca17,nested_tuned,0.6347826086956522,0.6261013190550603,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+15,3,mlp,raw_pca17,fixed,0.6347826086956522,0.6357269141846865,
+15,3,mlp,raw_pca17,nested_tuned,0.6347826086956522,0.6357269141846865,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+15,3,svm,joint_angle,fixed,0.6782608695652174,0.6839664502164503,
+15,3,svm,joint_angle,nested_tuned,0.6782608695652174,0.6813447590972136,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+15,3,knn,joint_angle,fixed,0.7391304347826086,0.7444917440660476,
+15,3,knn,joint_angle,nested_tuned,0.6608695652173913,0.6483741141059883,"{""model__n_neighbors"": 9, ""model__weights"": ""distance""}"
+15,3,mlp,joint_angle,fixed,0.7478260869565218,0.7456801884046466,
+15,3,mlp,joint_angle,nested_tuned,0.7304347826086957,0.7261235270886268,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+15,3,svm,corrected,fixed,0.7217391304347827,0.7236115930881941,
+15,3,svm,corrected,nested_tuned,0.7217391304347827,0.7236115930881941,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+15,3,knn,corrected,fixed,0.7217391304347827,0.7341010282186753,
+15,3,knn,corrected,nested_tuned,0.7565217391304347,0.7699466111230816,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+15,3,mlp,corrected,fixed,0.7304347826086957,0.7275517967184933,
+15,3,mlp,corrected,nested_tuned,0.7304347826086957,0.7268505266592014,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+15,3,svm,optimized_action,fixed,0.7043478260869566,0.7051671418434219,
+15,3,svm,optimized_action,nested_tuned,0.41739130434782606,0.35256175842084697,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+15,3,knn,optimized_action,fixed,0.6956521739130435,0.7005216640085061,
+15,3,knn,optimized_action,nested_tuned,0.7391304347826086,0.7432755889304238,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+15,3,mlp,optimized_action,fixed,0.6782608695652174,0.6781930426667269,
+15,3,mlp,optimized_action,nested_tuned,0.6173913043478261,0.616591813960235,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+15,3,svm,optimized_full,fixed,0.3652173913043478,0.36304137039431156,
+15,3,svm,optimized_full,nested_tuned,0.3652173913043478,0.36304137039431156,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+15,3,knn,optimized_full,fixed,0.40869565217391307,0.3879056957724371,
+15,3,knn,optimized_full,nested_tuned,0.4260869565217391,0.38630408878169237,"{""model__n_neighbors"": 9, ""model__weights"": ""distance""}"
+15,3,mlp,optimized_full,fixed,0.3652173913043478,0.363709071975201,
+15,3,mlp,optimized_full,nested_tuned,0.391304347826087,0.38279921193151845,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+16,3,svm,raw,fixed,0.4,0.3896832316187155,
+16,3,svm,raw,nested_tuned,0.3391304347826087,0.33449624782848114,"{""model__C"": 5.0, ""model__gamma"": 0.01}"
+16,3,knn,raw,fixed,0.3739130434782609,0.35979529713384634,
+16,3,knn,raw,nested_tuned,0.391304347826087,0.38259569508728203,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+16,3,mlp,raw,fixed,0.4260869565217391,0.41899739076190845,
+16,3,mlp,raw,nested_tuned,0.4,0.4006304492636192,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+16,3,svm,raw_pca11,fixed,0.6608695652173913,0.6640752249575779,
+16,3,svm,raw_pca11,nested_tuned,0.4782608695652174,0.47992810291660865,"{""model__C"": 0.1, ""model__gamma"": 0.1}"
+16,3,knn,raw_pca11,fixed,0.6,0.5971299249808021,
+16,3,knn,raw_pca11,nested_tuned,0.6347826086956522,0.634032971082913,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+16,3,mlp,raw_pca11,fixed,0.6869565217391305,0.6802858812901854,
+16,3,mlp,raw_pca11,nested_tuned,0.6869565217391305,0.6802858812901854,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+16,3,svm,raw_pca17,fixed,0.6869565217391305,0.6993315599863079,
+16,3,svm,raw_pca17,nested_tuned,0.6782608695652174,0.6904737273158325,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+16,3,knn,raw_pca17,fixed,0.6695652173913044,0.6646532445340787,
+16,3,knn,raw_pca17,nested_tuned,0.7304347826086957,0.7274527181019971,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+16,3,mlp,raw_pca17,fixed,0.6782608695652174,0.6703119158830514,
+16,3,mlp,raw_pca17,nested_tuned,0.7391304347826086,0.7325715246446953,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+16,3,svm,joint_angle,fixed,0.7391304347826086,0.7369268211659517,
+16,3,svm,joint_angle,nested_tuned,0.5391304347826087,0.5233433224294762,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+16,3,knn,joint_angle,fixed,0.7130434782608696,0.7211792005909653,
+16,3,knn,joint_angle,nested_tuned,0.8347826086956521,0.8379217273954116,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+16,3,mlp,joint_angle,fixed,0.808695652173913,0.8083893746432446,
+16,3,mlp,joint_angle,nested_tuned,0.7652173913043478,0.7664597382407932,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+16,3,svm,corrected,fixed,0.808695652173913,0.8061952137690264,
+16,3,svm,corrected,nested_tuned,0.7739130434782608,0.7711694948537055,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+16,3,knn,corrected,fixed,0.7304347826086957,0.7332615973218557,
+16,3,knn,corrected,nested_tuned,0.7913043478260869,0.7875864403749869,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+16,3,mlp,corrected,fixed,0.7913043478260869,0.7917718375035449,
+16,3,mlp,corrected,nested_tuned,0.7478260869565218,0.7514160501965379,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+16,3,svm,optimized_action,fixed,0.808695652173913,0.8030610155610155,
+16,3,svm,optimized_action,nested_tuned,0.782608695652174,0.7799824473199086,"{""model__C"": 1.0, ""model__gamma"": 0.01}"
+16,3,knn,optimized_action,fixed,0.7043478260869566,0.707121952834468,
+16,3,knn,optimized_action,nested_tuned,0.782608695652174,0.7827860033490389,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+16,3,mlp,optimized_action,fixed,0.7652173913043478,0.7671823790244843,
+16,3,mlp,optimized_action,nested_tuned,0.7391304347826086,0.7369057118736194,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+16,3,svm,optimized_full,fixed,0.4956521739130435,0.49672423054214226,
+16,3,svm,optimized_full,nested_tuned,0.4956521739130435,0.49672423054214226,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+16,3,knn,optimized_full,fixed,0.43478260869565216,0.4261408942410226,
+16,3,knn,optimized_full,nested_tuned,0.48695652173913045,0.4807310956146498,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+16,3,mlp,optimized_full,fixed,0.48695652173913045,0.46223994503380267,
+16,3,mlp,optimized_full,nested_tuned,0.5217391304347826,0.504488053985902,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+17,3,svm,raw,fixed,0.34782608695652173,0.3607103354336139,
+17,3,svm,raw,nested_tuned,0.3391304347826087,0.3172580143168378,"{""model__C"": 1.0, ""model__gamma"": 1.0}"
+17,3,knn,raw,fixed,0.4260869565217391,0.4197479266424144,
+17,3,knn,raw,nested_tuned,0.4260869565217391,0.4197479266424144,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+17,3,mlp,raw,fixed,0.40869565217391307,0.3997221266702052,
+17,3,mlp,raw,nested_tuned,0.40869565217391307,0.3997221266702052,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+17,3,svm,raw_pca11,fixed,0.6173913043478261,0.6228824481977587,
+17,3,svm,raw_pca11,nested_tuned,0.6260869565217392,0.6320445445445445,"{""model__C"": 5.0, ""model__gamma"": 0.01}"
+17,3,knn,raw_pca11,fixed,0.6260869565217392,0.6231761195440617,
+17,3,knn,raw_pca11,nested_tuned,0.6173913043478261,0.6181199348168495,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+17,3,mlp,raw_pca11,fixed,0.6434782608695652,0.6416813693176677,
+17,3,mlp,raw_pca11,nested_tuned,0.6434782608695652,0.6416813693176677,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+17,3,svm,raw_pca17,fixed,0.5478260869565217,0.5660242269437672,
+17,3,svm,raw_pca17,nested_tuned,0.6086956521739131,0.6223706250176838,"{""model__C"": 5.0, ""model__gamma"": 0.01}"
+17,3,knn,raw_pca17,fixed,0.6347826086956522,0.6298850394760903,
+17,3,knn,raw_pca17,nested_tuned,0.6434782608695652,0.6370088575970928,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+17,3,mlp,raw_pca17,fixed,0.6782608695652174,0.675902595158977,
+17,3,mlp,raw_pca17,nested_tuned,0.4956521739130435,0.4865910489166303,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+17,3,svm,joint_angle,fixed,0.8,0.8060871502731968,
+17,3,svm,joint_angle,nested_tuned,0.8,0.8060871502731968,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+17,3,knn,joint_angle,fixed,0.6869565217391305,0.6704280201796191,
+17,3,knn,joint_angle,nested_tuned,0.6869565217391305,0.6704280201796191,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+17,3,mlp,joint_angle,fixed,0.7130434782608696,0.7122639622639623,
+17,3,mlp,joint_angle,nested_tuned,0.7739130434782608,0.7738490370069316,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+17,3,svm,corrected,fixed,0.782608695652174,0.7887412329272793,
+17,3,svm,corrected,nested_tuned,0.6869565217391305,0.6850189586617595,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+17,3,knn,corrected,fixed,0.7130434782608696,0.6931773999859105,
+17,3,knn,corrected,nested_tuned,0.782608695652174,0.7784362703717541,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+17,3,mlp,corrected,fixed,0.7739130434782608,0.774873080136238,
+17,3,mlp,corrected,nested_tuned,0.7304347826086957,0.7188783077841587,"{""model__alpha"": 0.01, ""model__hidden_layer_sizes"": [32]}"
+17,3,svm,optimized_action,fixed,0.782608695652174,0.7835529799278089,
+17,3,svm,optimized_action,nested_tuned,0.6869565217391305,0.6773566837813662,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+17,3,knn,optimized_action,fixed,0.7304347826086957,0.7180392819927702,
+17,3,knn,optimized_action,nested_tuned,0.7913043478260869,0.7849443532202153,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+17,3,mlp,optimized_action,fixed,0.7565217391304347,0.756423764511056,
+17,3,mlp,optimized_action,nested_tuned,0.7043478260869566,0.7009672006223729,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+17,3,svm,optimized_full,fixed,0.5043478260869565,0.5109621526288193,
+17,3,svm,optimized_full,nested_tuned,0.3565217391304348,0.34843833787425105,"{""model__C"": 0.1, ""model__gamma"": 0.1}"
+17,3,knn,optimized_full,fixed,0.46956521739130436,0.4601450513326006,
+17,3,knn,optimized_full,nested_tuned,0.4782608695652174,0.4705694128031881,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+17,3,mlp,optimized_full,fixed,0.5565217391304348,0.5502229931143413,
+17,3,mlp,optimized_full,nested_tuned,0.5217391304347826,0.5117579376858677,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+18,3,svm,raw,fixed,0.3652173913043478,0.34912354803190465,
+18,3,svm,raw,nested_tuned,0.34782608695652173,0.3321319589991055,"{""model__C"": 5.0, ""model__gamma"": 1.0}"
+18,3,knn,raw,fixed,0.3217391304347826,0.31909011527369224,
+18,3,knn,raw,nested_tuned,0.33043478260869563,0.33263223263223257,"{""model__n_neighbors"": 7, ""model__weights"": ""distance""}"
+18,3,mlp,raw,fixed,0.3217391304347826,0.31425113952390993,
+18,3,mlp,raw,nested_tuned,0.3652173913043478,0.35586221251354916,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"
+18,3,svm,raw_pca11,fixed,0.5478260869565217,0.5685395689775556,
+18,3,svm,raw_pca11,nested_tuned,0.48695652173913045,0.4939431633710811,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+18,3,knn,raw_pca11,fixed,0.5565217391304348,0.5590891853942628,
+18,3,knn,raw_pca11,nested_tuned,0.4956521739130435,0.5071013390341121,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+18,3,mlp,raw_pca11,fixed,0.591304347826087,0.5914053426248548,
+18,3,mlp,raw_pca11,nested_tuned,0.591304347826087,0.5914053426248548,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+18,3,svm,raw_pca17,fixed,0.5826086956521739,0.5983014637074704,
+18,3,svm,raw_pca17,nested_tuned,0.5304347826086957,0.5098626298901697,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+18,3,knn,raw_pca17,fixed,0.591304347826087,0.5923054763345145,
+18,3,knn,raw_pca17,nested_tuned,0.5739130434782609,0.5793603643349138,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+18,3,mlp,raw_pca17,fixed,0.5826086956521739,0.5789666949599174,
+18,3,mlp,raw_pca17,nested_tuned,0.5826086956521739,0.5789666949599174,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+18,3,svm,joint_angle,fixed,0.7043478260869566,0.7175553173776895,
+18,3,svm,joint_angle,nested_tuned,0.7130434782608696,0.721490406273015,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+18,3,knn,joint_angle,fixed,0.6869565217391305,0.6664307786046917,
+18,3,knn,joint_angle,nested_tuned,0.6869565217391305,0.6664307786046917,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+18,3,mlp,joint_angle,fixed,0.7043478260869566,0.7011184466508825,
+18,3,mlp,joint_angle,nested_tuned,0.7043478260869566,0.7011184466508825,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+18,3,svm,corrected,fixed,0.782608695652174,0.7941316316316316,
+18,3,svm,corrected,nested_tuned,0.7652173913043478,0.7748807443291278,"{""model__C"": 0.1, ""model__gamma"": 0.01}"
+18,3,knn,corrected,fixed,0.7565217391304347,0.758782495624601,
+18,3,knn,corrected,nested_tuned,0.7565217391304347,0.758782495624601,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+18,3,mlp,corrected,fixed,0.7739130434782608,0.7796612121815129,
+18,3,mlp,corrected,nested_tuned,0.7478260869565218,0.7517176645083622,"{""model__alpha"": 0.01, ""model__hidden_layer_sizes"": [64, 32]}"
+18,3,svm,optimized_action,fixed,0.7304347826086957,0.7378306878306878,
+18,3,svm,optimized_action,nested_tuned,0.591304347826087,0.551992774673085,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+18,3,knn,optimized_action,fixed,0.7304347826086957,0.7298127798127797,
+18,3,knn,optimized_action,nested_tuned,0.6173913043478261,0.6078123901890505,"{""model__n_neighbors"": 9, ""model__weights"": ""distance""}"
+18,3,mlp,optimized_action,fixed,0.7565217391304347,0.7604164186010225,
+18,3,mlp,optimized_action,nested_tuned,0.6608695652173913,0.6659749670619236,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+18,3,svm,optimized_full,fixed,0.4956521739130435,0.5153963548528766,
+18,3,svm,optimized_full,nested_tuned,0.5478260869565217,0.5481738118891756,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+18,3,knn,optimized_full,fixed,0.4956521739130435,0.497128673377117,
+18,3,knn,optimized_full,nested_tuned,0.5217391304347826,0.5221226465022551,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+18,3,mlp,optimized_full,fixed,0.5130434782608696,0.5224422201312958,
+18,3,mlp,optimized_full,nested_tuned,0.5043478260869565,0.511555054393929,"{""model__alpha"": 0.01, ""model__hidden_layer_sizes"": [64, 32]}"
+19,3,svm,raw,fixed,0.3652173913043478,0.3632532757919755,
+19,3,svm,raw,nested_tuned,0.3652173913043478,0.3632532757919755,"{""model__C"": 5.0, ""model__gamma"": ""scale""}"
+19,3,knn,raw,fixed,0.30434782608695654,0.28659128705148035,
+19,3,knn,raw,nested_tuned,0.34782608695652173,0.3354182557843885,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+19,3,mlp,raw,fixed,0.4,0.38886127100412815,
+19,3,mlp,raw,nested_tuned,0.4,0.388741404420847,"{""model__alpha"": 0.01, ""model__hidden_layer_sizes"": [128, 64]}"
+19,3,svm,raw_pca11,fixed,0.5826086956521739,0.5960093848722,
+19,3,svm,raw_pca11,nested_tuned,0.5826086956521739,0.6071421950315165,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+19,3,knn,raw_pca11,fixed,0.5478260869565217,0.5206480824287912,
+19,3,knn,raw_pca11,nested_tuned,0.4608695652173913,0.44531375225567604,"{""model__n_neighbors"": 3, ""model__weights"": ""uniform""}"
+19,3,mlp,raw_pca11,fixed,0.5391304347826087,0.5387615804265649,
+19,3,mlp,raw_pca11,nested_tuned,0.5478260869565217,0.5483642560210309,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64]}"
+19,3,svm,raw_pca17,fixed,0.5652173913043478,0.582117502457987,
+19,3,svm,raw_pca17,nested_tuned,0.5739130434782609,0.5923389077449145,"{""model__C"": 1.0, ""model__gamma"": ""scale""}"
+19,3,knn,raw_pca17,fixed,0.5304347826086957,0.495476634914985,
+19,3,knn,raw_pca17,nested_tuned,0.5478260869565217,0.5143352785175639,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+19,3,mlp,raw_pca17,fixed,0.6434782608695652,0.6327763474234511,
+19,3,mlp,raw_pca17,nested_tuned,0.6086956521739131,0.5967692789463322,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+19,3,svm,joint_angle,fixed,0.7478260869565218,0.7530039944566723,
+19,3,svm,joint_angle,nested_tuned,0.7217391304347827,0.7282466844979947,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+19,3,knn,joint_angle,fixed,0.7391304347826086,0.7350835040651877,
+19,3,knn,joint_angle,nested_tuned,0.7391304347826086,0.7350835040651877,"{""model__n_neighbors"": 3, ""model__weights"": ""distance""}"
+19,3,mlp,joint_angle,fixed,0.6956521739130435,0.7031760920776939,
+19,3,mlp,joint_angle,nested_tuned,0.7565217391304347,0.7591318026100634,"{""model__alpha"": 0.001, ""model__hidden_layer_sizes"": [64, 32]}"
+19,3,svm,corrected,fixed,0.7913043478260869,0.7957255492139214,
+19,3,svm,corrected,nested_tuned,0.7913043478260869,0.7957920563965103,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+19,3,knn,corrected,fixed,0.7304347826086957,0.7270010232385076,
+19,3,knn,corrected,nested_tuned,0.7217391304347827,0.7243594726627601,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+19,3,mlp,corrected,fixed,0.8,0.7992607992607993,
+19,3,mlp,corrected,nested_tuned,0.8,0.7992607992607993,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [128, 64]}"
+19,3,svm,optimized_action,fixed,0.7391304347826086,0.7532956869727383,
+19,3,svm,optimized_action,nested_tuned,0.7043478260869566,0.7113125022088607,"{""model__C"": 0.1, ""model__gamma"": ""scale""}"
+19,3,knn,optimized_action,fixed,0.6521739130434783,0.6481221459086935,
+19,3,knn,optimized_action,nested_tuned,0.6782608695652174,0.6775860591650066,"{""model__n_neighbors"": 1, ""model__weights"": ""uniform""}"
+19,3,mlp,optimized_action,fixed,0.7478260869565218,0.7475930992057437,
+19,3,mlp,optimized_action,nested_tuned,0.7130434782608696,0.7188910682813122,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [64, 32]}"
+19,3,svm,optimized_full,fixed,0.3652173913043478,0.39644260920959323,
+19,3,svm,optimized_full,nested_tuned,0.34782608695652173,0.37164927689757604,"{""model__C"": 0.1, ""model__gamma"": 1.0}"
+19,3,knn,optimized_full,fixed,0.3565217391304348,0.3560209942562884,
+19,3,knn,optimized_full,nested_tuned,0.3391304347826087,0.3129841002843526,"{""model__n_neighbors"": 9, ""model__weights"": ""distance""}"
+19,3,mlp,optimized_full,fixed,0.3217391304347826,0.33074725849034503,
+19,3,mlp,optimized_full,nested_tuned,0.3217391304347826,0.3256335405760693,"{""model__alpha"": 0.0001, ""model__hidden_layer_sizes"": [32]}"

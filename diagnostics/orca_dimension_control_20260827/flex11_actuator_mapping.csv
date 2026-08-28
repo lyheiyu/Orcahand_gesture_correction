@@ -1,0 +1,18 @@
+original_index,actuator_name,keep_in_flex11,flex11_semantic_name,flex11_output_index,reason
+0,right_wrist_actuator,no,,,wrist or abduction coordinate excluded by preregistered semantic rule
+1,right_p-abd_actuator,no,,,wrist or abduction coordinate excluded by preregistered semantic rule
+2,right_p-mcp_actuator,yes,little_mcp,9,flexion/opposition coordinate matched to JointAngle-11
+3,right_p-pip_actuator,yes,little_pip,10,flexion/opposition coordinate matched to JointAngle-11
+4,right_r-abd_actuator,no,,,wrist or abduction coordinate excluded by preregistered semantic rule
+5,right_r-mcp_actuator,yes,ring_mcp,7,flexion/opposition coordinate matched to JointAngle-11
+6,right_r-pip_actuator,yes,ring_pip,8,flexion/opposition coordinate matched to JointAngle-11
+7,right_m-abd_actuator,no,,,wrist or abduction coordinate excluded by preregistered semantic rule
+8,right_m-mcp_actuator,yes,middle_mcp,5,flexion/opposition coordinate matched to JointAngle-11
+9,right_m-pip_actuator,yes,middle_pip,6,flexion/opposition coordinate matched to JointAngle-11
+10,right_i-abd_actuator,no,,,wrist or abduction coordinate excluded by preregistered semantic rule
+11,right_i-mcp_actuator,yes,index_mcp,3,flexion/opposition coordinate matched to JointAngle-11
+12,right_i-pip_actuator,yes,index_pip,4,flexion/opposition coordinate matched to JointAngle-11
+13,right_t-cmc_actuator,yes,thumb_cmc,0,flexion/opposition coordinate matched to JointAngle-11
+14,right_t-abd_actuator,no,,,wrist or abduction coordinate excluded by preregistered semantic rule
+15,right_t-mcp_actuator,yes,thumb_mcp,1,flexion/opposition coordinate matched to JointAngle-11
+16,right_t-pip_actuator,yes,thumb_ip,2,flexion/opposition coordinate matched to JointAngle-11

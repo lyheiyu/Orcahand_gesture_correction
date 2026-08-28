@@ -1,0 +1,12 @@
+{
+  "num_sequences": 571,
+  "num_frames": 26260,
+  "nonfinite_values": 0,
+  "bound_violations": 0,
+  "oa_success_rate_mean": 1.0,
+  "oa_iterations_mean": 6.3142557828894885,
+  "oa_solve_time_ms_mean": 31.630003765169345,
+  "oa_solve_time_ms_p95_mean": 41.83361256334461,
+  "history_reset_max_abs_difference": 0.0,
+  "reused_clean_feature_sequences": 571
+}

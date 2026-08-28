@@ -1,0 +1,135 @@
+{
+  "benchmark": "controlled clean-reference trajectory recovery",
+  "input": "C:\\D\\projects\\Orca robot hand\\orca sim\\orca_sim\\diagnostics\\updated_6class_20260820\\gesture_sequence_dataset_chinese_dance_6class_after_fix.csv",
+  "output_directory": "C:\\D\\projects\\Orca robot hand\\orca sim\\orca_sim\\diagnostics\\recovery_benchmark_20260827_smoke",
+  "git_commit": "951b78a7c294b08158af7d3926bc38d965eba702",
+  "base_seed": 42,
+  "seed_pool_size": 10,
+  "assignment": "one balanced corruption condition per sequence",
+  "coordinate_unit": "existing normalized raw landmark coordinate",
+  "gaussian_standard_deviations": {
+    "mild": 0.01,
+    "medium": 0.03,
+    "severe": 0.06
+  },
+  "spike_displacement_magnitude": 0.75,
+  "dropout_model": "freeze distal finger landmarks at the last visible frame",
+  "dropout_landmarks": {
+    "thumb": [
+      2,
+      3,
+      4
+    ],
+    "index": [
+      6,
+      7,
+      8
+    ],
+    "middle": [
+      10,
+      11,
+      12
+    ]
+  },
+  "conditions": [
+    {
+      "corruption_type": "gaussian",
+      "severity": "mild",
+      "duration": 0,
+      "finger_group": "all",
+      "magnitude": 0.01,
+      "condition_id": "gaussian_mild"
+    },
+    {
+      "corruption_type": "gaussian",
+      "severity": "medium",
+      "duration": 0,
+      "finger_group": "all",
+      "magnitude": 0.03,
+      "condition_id": "gaussian_medium"
+    },
+    {
+      "corruption_type": "gaussian",
+      "severity": "severe",
+      "duration": 0,
+      "finger_group": "all",
+      "magnitude": 0.06,
+      "condition_id": "gaussian_severe"
+    },
+    {
+      "corruption_type": "spike",
+      "severity": "fixed",
+      "duration": 1,
+      "finger_group": "mixed",
+      "magnitude": 0.75,
+      "condition_id": "spike_fixed_1f_mixed"
+    },
+    {
+      "corruption_type": "spike",
+      "severity": "fixed",
+      "duration": 2,
+      "finger_group": "mixed",
+      "magnitude": 0.75,
+      "condition_id": "spike_fixed_2f_mixed"
+    },
+    {
+      "corruption_type": "spike",
+      "severity": "fixed",
+      "duration": 3,
+      "finger_group": "mixed",
+      "magnitude": 0.75,
+      "condition_id": "spike_fixed_3f_mixed"
+    },
+    {
+      "corruption_type": "dropout",
+      "severity": "short",
+      "duration": 3,
+      "finger_group": "thumb",
+      "magnitude": 0.0,
+      "condition_id": "dropout_short_3f_thumb"
+    },
+    {
+      "corruption_type": "dropout",
+      "severity": "short",
+      "duration": 5,
+      "finger_group": "thumb",
+      "magnitude": 0.0,
+      "condition_id": "dropout_short_5f_thumb"
+    },
+    {
+      "corruption_type": "dropout",
+      "severity": "short",
+      "duration": 3,
+      "finger_group": "index",
+      "magnitude": 0.0,
+      "condition_id": "dropout_short_3f_index"
+    },
+    {
+      "corruption_type": "dropout",
+      "severity": "short",
+      "duration": 5,
+      "finger_group": "index",
+      "magnitude": 0.0,
+      "condition_id": "dropout_short_5f_index"
+    },
+    {
+      "corruption_type": "dropout",
+      "severity": "short",
+      "duration": 3,
+      "finger_group": "middle",
+      "magnitude": 0.0,
+      "condition_id": "dropout_short_3f_middle"
+    },
+    {
+      "corruption_type": "dropout",
+      "severity": "short",
+      "duration": 5,
+      "finger_group": "middle",
+      "magnitude": 0.0,
+      "condition_id": "dropout_short_5f_middle"
+    }
+  ],
+  "num_sequences": 5,
+  "num_frames": 345,
+  "num_affected_frame_landmark_pairs": 3726
+}

@@ -1,0 +1,92 @@
+{
+  "input": "C:\\D\\projects\\Orca robot hand\\orca sim\\orca_sim\\diagnostics\\updated_6class_20260820\\gesture_sequence_dataset_chinese_dance_6class_after_fix.csv",
+  "output": "C:\\D\\projects\\Orca robot hand\\orca sim\\orca_sim\\diagnostics\\joint_angle_20260826\\gesture_sequence_dataset_joint_angle11.csv",
+  "representation": "JointAngle-11",
+  "units": "degrees",
+  "num_dimensions": 11,
+  "num_frames": 26260,
+  "num_sequences": 571,
+  "invalid_frames": 0,
+  "invalid_values": 0,
+  "invalid_by_joint": {
+    "thumb_cmc": 0,
+    "thumb_mcp": 0,
+    "thumb_ip": 0,
+    "index_mcp": 0,
+    "index_pip": 0,
+    "middle_mcp": 0,
+    "middle_pip": 0,
+    "ring_mcp": 0,
+    "ring_pip": 0,
+    "little_mcp": 0,
+    "little_pip": 0
+  },
+  "joint_definitions": [
+    {
+      "name": "thumb_cmc",
+      "proximal": 0,
+      "joint": 1,
+      "distal": 2
+    },
+    {
+      "name": "thumb_mcp",
+      "proximal": 1,
+      "joint": 2,
+      "distal": 3
+    },
+    {
+      "name": "thumb_ip",
+      "proximal": 2,
+      "joint": 3,
+      "distal": 4
+    },
+    {
+      "name": "index_mcp",
+      "proximal": 0,
+      "joint": 5,
+      "distal": 6
+    },
+    {
+      "name": "index_pip",
+      "proximal": 5,
+      "joint": 6,
+      "distal": 7
+    },
+    {
+      "name": "middle_mcp",
+      "proximal": 0,
+      "joint": 9,
+      "distal": 10
+    },
+    {
+      "name": "middle_pip",
+      "proximal": 9,
+      "joint": 10,
+      "distal": 11
+    },
+    {
+      "name": "ring_mcp",
+      "proximal": 0,
+      "joint": 13,
+      "distal": 14
+    },
+    {
+      "name": "ring_pip",
+      "proximal": 13,
+      "joint": 14,
+      "distal": 15
+    },
+    {
+      "name": "little_mcp",
+      "proximal": 0,
+      "joint": 17,
+      "distal": 18
+    },
+    {
+      "name": "little_pip",
+      "proximal": 17,
+      "joint": 18,
+      "distal": 19
+    }
+  ]
+}

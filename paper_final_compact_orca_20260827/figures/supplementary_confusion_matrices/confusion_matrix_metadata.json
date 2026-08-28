@@ -1,0 +1,35 @@
+{
+  "dataset": "C:\\D\\projects\\Orca robot hand\\orca sim\\orca_sim\\diagnostics\\updated_6class_20260820\\gesture_sequence_dataset_chinese_dance_6class_after_fix.csv",
+  "dataset_sha256": "0fa20fcc94c170d24b514ad4a356631bfa4fd9ee883d9d88eae50fffe4828960",
+  "development_manifest": "C:\\D\\projects\\Orca robot hand\\orca sim\\orca_sim\\diagnostics\\orca_compact_selection_20260827\\development_sequences.csv",
+  "development_manifest_sha256": "b9d3769a00107f29941dc60b58baacec39e113cd30d1d1c1d775546f1c503b17",
+  "final_manifest": "C:\\D\\projects\\Orca robot hand\\orca sim\\orca_sim\\diagnostics\\orca_compact_selection_20260827\\final_test_sequences.csv",
+  "final_manifest_sha256": "dc995a69e178393bbf1cc056d084185d935b1fcee4248e0cea17cc314711a33f",
+  "shot": 3,
+  "repeats": 20,
+  "seed": 42,
+  "num_development_sequences": 456,
+  "num_final_sequences": 115,
+  "labels": [
+    "deer_horn",
+    "flower_pinch",
+    "orchid_finger",
+    "orchid_palm",
+    "prayer_beads",
+    "three_finger_bent"
+  ],
+  "representations": [
+    "joint_angle11",
+    "compact_optimized_action7"
+  ],
+  "classifiers": [
+    "svm",
+    "knn",
+    "rf",
+    "mlp"
+  ],
+  "aggregation": "sum of confusion counts across all repeat-level final predictions",
+  "metric_groups_exact_within_1e_12": 159,
+  "metric_groups_total": 160,
+  "reproduction_note": "CMs are regenerated predictions under the current software environment. See reproduction_validation.csv for comparison with frozen historical metrics."
+}

@@ -1,0 +1,9 @@
+method,baseline,metric,num_pairs,mean_difference_oa_minus_baseline,median_difference_oa_minus_baseline,wilcoxon_statistic,p_value
+Fixed OA,Corrupted Input,corrupted_region_error_mean,571,1.5945585440672834,1.662681070821033,0.0,3.237644668536786e-95
+Fixed OA,Corrupted Input,robust_recovery_ratio_region,571,0.19102699729953382,0.2966931429374762,45481.0,4.666110829632685e-20
+Fixed OA,Kalman,corrupted_region_error_mean,571,1.626540804969052,1.6491733155593642,0.0,3.237644668536786e-95
+Fixed OA,Kalman,robust_recovery_ratio_region,571,-0.5489108658008363,-0.4599622863522542,5717.0,1.3143756159253932e-82
+Fixed OA,One-Euro,corrupted_region_error_mean,571,1.6586667323201025,1.6858935339865444,0.0,3.237644668536786e-95
+Fixed OA,One-Euro,robust_recovery_ratio_region,571,-0.2602044752644628,-0.16285126381033221,42850.0,7.679870505462659e-23
+Fixed OA,Corrected,corrupted_region_error_mean,571,0.03249439773788222,0.06217617769281558,45769.0,9.163238544664224e-20
+Fixed OA,Corrected,robust_recovery_ratio_region,571,0.4427373524915439,0.3866942930739151,724.0,1.4365099420545903e-93

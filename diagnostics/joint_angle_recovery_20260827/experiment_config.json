@@ -1,0 +1,119 @@
+{
+  "dataset": "C:\\D\\projects\\Orca robot hand\\orca sim\\orca_sim\\diagnostics\\updated_6class_20260820\\gesture_sequence_dataset_chinese_dance_6class_after_fix.csv",
+  "terminology": "controlled clean reference; not anatomical ground truth",
+  "units": "degrees",
+  "seed": 42,
+  "development_calibration_ids": [
+    "00d53103d2db",
+    "013813bfd4b6",
+    "01fd6a3af833",
+    "02031cd71838",
+    "02788771595a",
+    "029acf1c8098",
+    "04e16016884a",
+    "05fccc72741b",
+    "065ced8f3f3c",
+    "07d55faaaef1",
+    "0811126d80b5",
+    "08f6838eb763",
+    "09dc2f057497",
+    "0cc3fe974e06",
+    "0d850ed38621",
+    "0da65ec5dfa1",
+    "0e4f4ee4e14c",
+    "15b1b2a699ed"
+  ],
+  "smoke_conditions": [
+    "Gaussian medium",
+    "3-frame spike",
+    "5-frame finger occlusion"
+  ],
+  "gaussian_sigma": 0.03,
+  "spike_magnitude": 0.75,
+  "confidence_formula_weights": {
+    "angle_jump": 0.35,
+    "geometry": 0.3,
+    "prediction": 0.35
+  },
+  "confidence_strength": 2.0,
+  "joint_lower_bounds_degrees": [
+    113.66177585601807,
+    95.38270023345947,
+    108.05528427124024,
+    93.47603164672852,
+    55.07028413772583,
+    75.76050426483154,
+    28.545727348327638,
+    77.3982985687256,
+    17.69719123840332,
+    89.55776050567627,
+    17.79953510284424
+  ],
+  "joint_upper_bounds_degrees": [
+    179.03559082031254,
+    180.0,
+    180.0,
+    180.0,
+    180.0,
+    180.0,
+    180.0,
+    180.0,
+    180.0,
+    180.0,
+    180.0
+  ],
+  "jump_scales_degrees": [
+    9.662101745605469,
+    11.723716735839844,
+    16.665817260742188,
+    10.415328979492188,
+    15.502986907958984,
+    13.3055419921875,
+    31.44762420654297,
+    13.426567077636719,
+    28.78434181213379,
+    12.556427001953125,
+    21.469913482666016
+  ],
+  "prediction_scales_degrees": [
+    14.249079895019523,
+    16.081900787353497,
+    24.303974914550768,
+    16.14488067626953,
+    25.38174552917479,
+    20.732078552246087,
+    50.36062660217258,
+    19.719371414184547,
+    45.76757659912098,
+    19.26321563720703,
+    34.14994735717764
+  ],
+  "geometry_scales_log_length_ratio": [
+    0.24630685753999826,
+    0.22418713064925658,
+    0.2674927432598075,
+    0.1985454412722836,
+    0.2768605571774326,
+    0.2121646949125649,
+    0.40723230188149295,
+    0.20596849407315268,
+    0.3932079879101009,
+    0.21572237716123163,
+    0.36892476350197245
+  ],
+  "development_selection": {
+    "strength": 2.0,
+    "strength_scores": {
+      "0.25": 25.83637866518328,
+      "0.5": 19.64705108784519,
+      "1.0": 10.60739786078747,
+      "2.0": 8.68026264057914
+    },
+    "kalman_process_var": 1.0,
+    "kalman_measurement_var": 100.0,
+    "kalman_best_development_mae": 12.216888876675322,
+    "oneeuro_min_cutoff": 0.5,
+    "oneeuro_beta": 0.0,
+    "oneeuro_best_development_mae": 18.501480188849733
+  }
+}

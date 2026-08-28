@@ -1,0 +1,18 @@
+index,actuator_name,anatomical_semantic_role,finger_group,type,included_in_current_flex11
+0,right_wrist_actuator,wrist,wrist,wrist,no
+1,right_p-abd_actuator,little abduction,little,abduction,no
+2,right_p-mcp_actuator,little MCP flexion,little,flexion,yes
+3,right_p-pip_actuator,little PIP flexion,little,flexion,yes
+4,right_r-abd_actuator,ring abduction,ring,abduction,no
+5,right_r-mcp_actuator,ring MCP flexion,ring,flexion,yes
+6,right_r-pip_actuator,ring PIP flexion,ring,flexion,yes
+7,right_m-abd_actuator,middle abduction,middle,abduction,no
+8,right_m-mcp_actuator,middle MCP flexion,middle,flexion,yes
+9,right_m-pip_actuator,middle PIP flexion,middle,flexion,yes
+10,right_i-abd_actuator,index abduction,index,abduction,no
+11,right_i-mcp_actuator,index MCP flexion,index,flexion,yes
+12,right_i-pip_actuator,index PIP flexion,index,flexion,yes
+13,right_t-cmc_actuator,thumb opposition / CMC,thumb,opposition,yes
+14,right_t-abd_actuator,thumb abduction,thumb,abduction,no
+15,right_t-mcp_actuator,thumb MCP flexion,thumb,flexion,yes
+16,right_t-pip_actuator,thumb IP flexion,thumb,flexion,yes

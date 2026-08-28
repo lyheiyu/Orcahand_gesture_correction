@@ -1,0 +1,5 @@
+classifier,frozen_setting
+SVM,RBF kernel; C=5; gamma=scale
+KNN,k=3; distance weighting
+RandomForest,200 trees; unrestricted depth
+MLP,"hidden=(128,64); alpha=1e-4; lr=1e-3; max_iter=1200"

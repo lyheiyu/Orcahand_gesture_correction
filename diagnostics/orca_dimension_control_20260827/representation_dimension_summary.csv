@@ -1,0 +1,8 @@
+representation,display_name,frame_dimensions,resampled_frames,encoded_features,construction
+joint_angle11,JointAngle-11,11,16,176,absolute 3D joint angles
+corrected17,Corrected-17,17,16,272,original ORCA actuator state
+optimized_action17,OptimizedAction-17,17,16,272,original ORCA actuator state
+corrected_flex11,Corrected-Flex11,11,16,176,fixed semantic actuator subset
+optimized_action_flex11,OptimizedAction-Flex11,11,16,176,fixed semantic actuator subset
+corrected_pca11,Corrected-PCA11,11,16,176,training-only frame-level PCA
+optimized_action_pca11,OptimizedAction-PCA11,11,16,176,training-only frame-level PCA

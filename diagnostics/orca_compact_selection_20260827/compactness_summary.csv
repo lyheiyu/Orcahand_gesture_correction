@@ -1,0 +1,5 @@
+representation,frame_dimensions,resample_frames,encoded_features,reduction_vs_orca17,reduction_vs_jointangle11
+JointAngle-11,11,16,176,0.3529411764705882,0.0
+OptimizedAction-Flex11,11,16,176,0.3529411764705882,0.0
+Compact OptimizedAction-7,7,16,112,0.5882352941176471,0.36363636363636365
+OptimizedAction-17,17,16,272,0.0,-0.5454545454545454

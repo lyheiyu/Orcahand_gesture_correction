@@ -1,0 +1,8 @@
+index,actuator,role,finger,type,lower_rad,upper_rad,compact7
+3,right_p-pip_actuator,little PIP flexion,little,flexion,-0.2618,1.8675,yes
+6,right_r-pip_actuator,ring PIP flexion,ring,flexion,-0.2618,1.8675,yes
+9,right_m-pip_actuator,middle PIP flexion,middle,flexion,-0.2618,1.8675,yes
+11,right_i-mcp_actuator,index MCP flexion,index,flexion,-0.4363,1.7453,yes
+12,right_i-pip_actuator,index PIP flexion,index,flexion,-0.2618,1.8675,yes
+15,right_t-mcp_actuator,thumb MCP flexion,thumb,flexion,-0.4363,1.7453,yes
+16,right_t-pip_actuator,thumb IP flexion,thumb,flexion,-0.2618,1.8675,yes

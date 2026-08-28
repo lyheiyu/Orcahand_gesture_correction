@@ -1,0 +1,6 @@
+sequence_id,label,num_frames,corruption_type,severity,duration,finger_group,magnitude,random_seed,condition_id,num_affected_pairs
+065ced8f3f3c,deer_horn,129,spike,fixed,2,mixed,0.75,46,spike_fixed_2f_mixed,6
+0811126d80b5,deer_horn,39,spike,fixed,1,mixed,0.75,45,spike_fixed_1f_mixed,3
+088859eb0563,deer_horn,108,gaussian,medium,0,all,0.03,43,gaussian_medium,2268
+08f6838eb763,deer_horn,38,gaussian,severe,0,all,0.06,44,gaussian_severe,798
+0945e8accdd1,deer_horn,31,gaussian,mild,0,all,0.01,42,gaussian_mild,651

@@ -1,0 +1,18 @@
+\begin{tabular}{lll}
+\toprule
+Parameter & Symbol & Value \\
+\midrule
+landmark weight & lambda\_l & 1.00 \\
+palm-normal weight & lambda\_n & 0.20 \\
+projection-prior weight & lambda\_p & 0.30 \\
+first-order temporal weight & lambda\_s & 0.10 \\
+acceleration weight & lambda\_a & 0.15 \\
+neutral-pose weight & lambda\_d & 0.15 \\
+soft-boundary weight & lambda\_b & 0.05 \\
+Huber threshold & delta & 0.08 \\
+optimizer & -- & SciPy L-BFGS-B \\
+maximum iterations per frame & -- & 120 \\
+initialization & -- & clipped actuator projection \\
+other stopping tolerances & -- & SciPy defaults \\
+\bottomrule
+\end{tabular}

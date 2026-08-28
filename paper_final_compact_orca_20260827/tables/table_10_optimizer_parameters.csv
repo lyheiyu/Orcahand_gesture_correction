@@ -1,0 +1,13 @@
+parameter,symbol,value
+landmark weight,lambda_l,1.00
+palm-normal weight,lambda_n,0.20
+projection-prior weight,lambda_p,0.30
+first-order temporal weight,lambda_s,0.10
+acceleration weight,lambda_a,0.15
+neutral-pose weight,lambda_d,0.15
+soft-boundary weight,lambda_b,0.05
+Huber threshold,delta,0.08
+optimizer,--,SciPy L-BFGS-B
+maximum iterations per frame,--,120
+initialization,--,clipped actuator projection
+other stopping tolerances,--,SciPy defaults
